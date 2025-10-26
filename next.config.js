@@ -54,11 +54,11 @@ const withPWA = require('next-pwa')({
 });
 
 const nextConfig = {
-  output: 'export',
+  // Don't use 'export' for Vercel - it disables API routes
+  // output: 'export',
   images: {
     unoptimized: true,
   },
-  trailingSlash: true,
 };
 
 module.exports = withPWA(nextConfig);
