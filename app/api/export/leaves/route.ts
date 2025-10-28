@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllLeaves } from "@/lib/googleSheets";
 
+// Mark route as dynamic
+export const dynamic = 'force-dynamic';
+
 /**
  * Export leaves data as CSV
  * GET /api/export/leaves

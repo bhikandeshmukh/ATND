@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEmployees } from "@/lib/employees";
 
+// Mark route as dynamic
+export const dynamic = 'force-dynamic';
+
 /**
  * Export employees data as CSV
  * GET /api/export/employees

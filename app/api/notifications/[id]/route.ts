@@ -3,6 +3,9 @@ import { google } from "googleapis";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 
+// Mark route as dynamic
+export const dynamic = 'force-dynamic';
+
 const auth = new google.auth.GoogleAuth({
     credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,

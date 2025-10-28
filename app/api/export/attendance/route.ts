@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSpecificMonthAttendance } from "@/lib/googleSheets";
 
+// Mark route as dynamic
+export const dynamic = 'force-dynamic';
+
 /**
  * Export attendance data as CSV
  * GET /api/export/attendance?year=2025&month=01

@@ -3,6 +3,9 @@ import { createNotification, NotificationType } from "@/lib/notifications/servic
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 
+// Mark route as dynamic
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/notifications/create
  * Create a manual notification (Admin only)

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { cache } from "@/lib/cache/advanced-cache";
 
+// Mark route as dynamic
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/cache/stats
  * Get cache statistics and monitoring data

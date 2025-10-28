@@ -3,6 +3,9 @@ import { markNotificationAsRead } from "@/lib/notifications/service";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 
+// Mark route as dynamic
+export const dynamic = 'force-dynamic';
+
 /**
  * PUT /api/notifications/[id]/read
  * Mark a notification as read

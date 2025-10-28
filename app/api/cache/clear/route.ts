@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cache } from "@/lib/cache/advanced-cache";
 
+// Mark route as dynamic
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/cache/clear
  * Clear cache (all, expired, or by tag/pattern)

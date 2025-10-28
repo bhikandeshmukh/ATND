@@ -3,6 +3,9 @@ import { getUnreadCount } from "@/lib/notifications/service";
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID!;
 
+// Mark route as dynamic
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/notifications/unread-count
  * Get unread notification count for a user
