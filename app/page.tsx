@@ -13,6 +13,9 @@ import AdminReportsView from "@/components/AdminReportsView";
 import { AttendanceRecord } from "@/lib/types";
 import UserNightDutyView from "@/components/UserNightDutyView";
 import InstallPWA from "@/components/InstallPWA";
+import NotificationBell from "@/components/NotificationBell";
+import NotificationManagement from "@/components/NotificationManagement";
+import UserNotifications from "@/components/UserNotifications";
 
 export interface AuthUser {
   id: string;
@@ -25,7 +28,7 @@ export default function Home() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"attendance" | "employees" | "reports" | "leaves" | "nightduty">("attendance");
+  const [activeTab, setActiveTab] = useState<"attendance" | "employees" | "reports" | "leaves" | "nightduty" | "notifications">("attendance");
 
   useEffect(() => {
     // Check if user is logged in (from localStorage)
@@ -78,11 +81,18 @@ export default function Home() {
   return (
     <main className="min-h-screen p-2 sm:p-3 md:p-4 bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-3 sm:mb-4">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
-            Attendance Tracker
-          </h1>
-          <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5 sm:mt-1">
+        <div className="mb-3 sm:mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex-1 text-center">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                Attendance Tracker
+              </h1>
+            </div>
+            <div className="absolute right-4 top-4">
+              <NotificationBell userId={user.id} userName={user.name} />
+            </div>
+          </div>
+          <p className="text-[10px] sm:text-xs text-gray-600 text-center">
             Welcome, {user.name} ({user.role === "admin" ? "Administrator" : "User"})
           </p>
         </div>
@@ -133,7 +143,18 @@ export default function Home() {
               📊 {isAdmin ? "Reports" : "My Reports"}
             </button>
 
-            {/* Tab 5: Employees (Admin Only) */}
+            {/* Tab 5: Notifications */}
+            <button
+              onClick={() => setActiveTab("notifications")}
+              className={`py-2 sm:py-3 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm ${activeTab === "notifications"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+            >
+              🔔 Notifications
+            </button>
+
+            {/* Tab 6: Employees (Admin Only) */}
             {isAdmin && (
               <button
                 onClick={() => setActiveTab("employees")}
@@ -197,6 +218,14 @@ export default function Home() {
           )
         ) : activeTab === "reports" ? (
           isAdmin ? <AdminReportsView /> : <UserReportsView userName={user.name} />
+        ) : activeTab === "notifications" ? (
+          <div className="bg-white rounded-lg shadow-md p-3 sm:p-4">
+            {isAdmin ? (
+              <NotificationManagement />
+            ) : (
+              <UserNotifications userId={user.id} userName={user.name} />
+            )}
+          </div>
         ) : (
           <div className="bg-white rounded-lg shadow-md p-3 sm:p-4">
             <EmployeeManagement />

@@ -24,7 +24,7 @@ function getColumnLetter(columnNumber: number): string {
 export async function getOrCreateMonthlySheet(spreadsheetId: string) {
   const now = new Date();
   const sheetName = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const expectedHeaders = ["Date", "Employee Name", "In Time", "Out Time", "In Location", "Out Location", "Total Minutes", "Total Hours", "Modified By"];
+  const expectedHeaders = ["Date", "Employee Name", "In Time", "Out Time", "In Location", "Out Location", "Total Minutes", "Total Hours", "Modified By", "Overtime Minutes", "Overtime Pay", "Is Holiday"];
 
   try {
     const response = await sheets.spreadsheets.get({ spreadsheetId });

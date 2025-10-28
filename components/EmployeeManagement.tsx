@@ -2,10 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { Employee } from "@/lib/types";
+import SearchBar from "./SearchBar";
+import { TableSkeleton } from "./LoadingSkeleton";
+import { showToast } from "./Toast";
 
 export default function EmployeeManagement() {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     position: "",
@@ -24,12 +30,39 @@ export default function EmployeeManagement() {
 
   const fetchEmployees = async () => {
     try {
+      setLoading(true);
       const response = await fetch("/api/employees");
       const data = await response.json();
-      setEmployees(Array.isArray(data) ? data : []);
+      const empList = Array.isArray(data) ? data : [];
+      setEmployees(empList);
+      setFilteredEmployees(empList);
     } catch (error) {
       console.error("Error fetching employees:", error);
+      showToast("Failed to load employees", "error");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setFilteredEmployees(employees);
+      return;
+    }
+
+    const filtered = employees.filter((emp) =>
+      emp.name.toLowerCase().includes(query.toLowerCase()) ||
+      emp.position.toLowerCase().includes(query.toLowerCase()) ||
+      emp.id.toLowerCase().includes(query.toLowerCase()) ||
+      emp.username?.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredEmployees(filtered);
+  };
+
+  const handleExport = () => {
+    window.open("/api/export/employees", "_blank");
+    showToast("Exporting employees data...", "info");
   };
 
   useEffect(() => {
@@ -49,7 +82,7 @@ export default function EmployeeManagement() {
       });
 
       if (response.ok) {
-        setMessage("Employee added successfully!");
+        showToast("Employee added successfully!", "success");
         setFormData({
           name: "",
           position: "",
@@ -66,10 +99,10 @@ export default function EmployeeManagement() {
         setShowForm(false);
         fetchEmployees();
       } else {
-        setMessage("Error adding employee");
+        showToast("Error adding employee", "error");
       }
     } catch (error) {
-      setMessage("Error adding employee");
+      showToast("Error adding employee", "error");
     } finally {
       setSubmitting(false);
     }
@@ -84,24 +117,46 @@ export default function EmployeeManagement() {
       });
 
       if (response.ok) {
+        showToast("Employee deleted successfully", "success");
         fetchEmployees();
+      } else {
+        showToast("Failed to delete employee", "error");
       }
     } catch (error) {
       console.error("Error deleting employee:", error);
+      showToast("Error deleting employee", "error");
     }
   };
 
   return (
     <div className="space-y-3 sm:space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800">Profiles</h2>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          {showForm ? "Cancel" : "+ Add Employee"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExport}
+            className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            {showForm ? "Cancel" : "+ Add Employee"}
+          </button>
+        </div>
       </div>
+
+      {!showForm && (
+        <SearchBar
+          placeholder="Search employees by name, position, ID..."
+          onSearch={handleSearch}
+        />
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-gray-50 p-3 sm:p-4 rounded-lg space-y-3">
@@ -271,26 +326,29 @@ export default function EmployeeManagement() {
         </form>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Position</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Working Days</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">In Time</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Out Time</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Per Min Rate</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fixed Salary</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {employees.map((employee) => (
+      {loading ? (
+        <TableSkeleton rows={5} columns={12} />
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Position</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Working Days</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">In Time</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Out Time</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Per Min Rate</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fixed Salary</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredEmployees.map((employee) => (
               <tr key={employee.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{employee.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.name}</td>
@@ -328,13 +386,17 @@ export default function EmployeeManagement() {
                   </button>
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {employees.length === 0 && (
-          <p className="text-center py-8 text-gray-600">No employees added yet.</p>
-        )}
-      </div>
+              ))}
+            </tbody>
+          </table>
+          {filteredEmployees.length === 0 && employees.length > 0 && (
+            <p className="text-center py-8 text-gray-600">No employees found matching "{searchQuery}"</p>
+          )}
+          {employees.length === 0 && (
+            <p className="text-center py-8 text-gray-600">No employees added yet.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

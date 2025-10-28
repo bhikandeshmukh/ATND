@@ -1,0 +1,66 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getSpecificMonthAttendance } from "@/lib/googleSheets";
+
+/**
+ * Export attendance data as CSV
+ * GET /api/export/attendance?year=2025&month=01
+ */
+export async function GET(req: NextRequest) {
+    try {
+        const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
+        if (!spreadsheetId) {
+            return NextResponse.json({ error: "Configuration error" }, { status: 500 });
+        }
+
+        const { searchParams } = new URL(req.url);
+        const year = searchParams.get("year") || new Date().getFullYear().toString();
+        const month = searchParams.get("month") || String(new Date().getMonth() + 1).padStart(2, "0");
+
+        const attendance = await getSpecificMonthAttendance(spreadsheetId, year, month);
+
+        if (attendance.length === 0) {
+            return NextResponse.json({ error: "No data found" }, { status: 404 });
+        }
+
+        // Convert to CSV
+        const headers = [
+            "Date",
+            "Employee Name",
+            "In Time",
+            "Out Time",
+            "In Location",
+            "Out Location",
+            "Total Minutes",
+            "Total Hours",
+        ];
+
+        const csvRows = [headers.join(",")];
+
+        for (const record of attendance) {
+            const row = [
+                record.date,
+                record.employeeName,
+                record.inTime,
+                record.outTime,
+                record.inLocation,
+                record.outLocation,
+                record.totalMinutes,
+                record.totalHours,
+            ];
+            csvRows.push(row.map((v) => `"${v}"`).join(","));
+        }
+
+        const csvContent = "\uFEFF" + csvRows.join("\n"); // BOM for Excel
+        const filename = `attendance_${year}_${month}.csv`;
+
+        return new NextResponse(csvContent, {
+            headers: {
+                "Content-Type": "text/csv;charset=utf-8;",
+                "Content-Disposition": `attachment; filename="${filename}"`,
+            },
+        });
+    } catch (error) {
+        console.error("Error exporting attendance:", error);
+        return NextResponse.json({ error: "Failed to export attendance" }, { status: 500 });
+    }
+}

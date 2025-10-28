@@ -25,7 +25,9 @@ yarn-error.log*
 # local env files
 .env*.local
 
-
+# IDE
+.vscode/
+.kiro/
 
 # vercel
 .vercel

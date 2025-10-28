@@ -4,12 +4,18 @@ Employee attendance management system with Google Sheets integration.
 
 ## Features
 
+### Core Features
 - Role-based access (Admin/User)
 - Geolocation verification (20m radius)
 - Check-in/Check-out tracking
 - Leave management
 - Night duty requests
 - Monthly reports
+
+### Advanced Features (New!)
+- **In-App Notifications** - Real-time notifications for leaves, attendance, and system events
+- **Audit Logging** - Complete history tracking for all attendance modifications
+- **Bulk Operations** - Import/export employees, attendance, and leave data (CSV/Excel)
 
 ## Setup
 
@@ -31,7 +37,20 @@ GOOGLE_SPREADSHEET_ID=your-spreadsheet-id
 JWT_SECRET=your-generated-secret
 ```
 
-4. Add first admin to Google Sheets "Employees" tab:
+4. Initialize Google Sheets (creates all required sheets):
+```bash
+npm run init-sheets
+```
+
+This will create the following sheets:
+- Employees
+- Audit_Logs (for tracking changes)
+- Notifications (for in-app notifications)
+- Leaves (for leave management)
+- Night_Duty_Requests (for night duty)
+- Monthly attendance sheets (created automatically)
+
+5. Add first admin to Google Sheets "Employees" tab:
 ```
 ID: 001
 Name: Admin User
@@ -45,16 +64,20 @@ Per Minute Rate: 0
 Fixed Salary: 0
 Username: admin
 Password: admin123
+Email: admin@example.com
+Shift ID: (leave empty)
+Notifications Enabled: TRUE
+Notification Types: (leave empty for all)
 ```
 
-5. Run:
+6. Run:
 ```bash
 npm run dev
 ```
 
-6. Login at http://localhost:3000 with `admin` / `admin123`
+7. Login at http://localhost:3000 with `admin` / `admin123`
 
-7. Change password immediately through Employees tab
+8. Change password immediately through Employees tab
 
 ## Tech Stack
 

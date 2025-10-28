@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateLeaveStatus } from "@/lib/googleSheets";
+import { updateLeaveStatus, getAllLeaves } from "@/lib/googleSheets";
+import { getEmployees } from "@/lib/employees";
+import { createNotification, NotificationType } from "@/lib/notifications/service";
+import { logLeaveAction } from "@/lib/audit/service";
+import { cache, CacheKeys } from "@/lib/cache/simple-cache";
 
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, status, paymentStatus, approvedBy } = body;
+    const { id, status, paymentStatus, approvedBy, approvedById } = body;
 
     console.log("Received update request:", { id, status, paymentStatus, approvedBy });
 
@@ -23,7 +27,69 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Get leave details before updating
+    const leaves = await getAllLeaves(spreadsheetId);
+    const leave = leaves.find((l) => l.id === id);
+
+    if (!leave) {
+      return NextResponse.json(
+        { error: "Leave not found" },
+        { status: 404 }
+      );
+    }
+
     await updateLeaveStatus(spreadsheetId, id, status, paymentStatus, approvedBy);
+
+    // Send notification to employee
+    try {
+      const employees = await getEmployees(spreadsheetId);
+      const employee = employees.find((emp) => emp.name === leave.employeeName);
+
+      if (employee) {
+        const notifType = status === "approved" 
+          ? NotificationType.LEAVE_APPROVED 
+          : NotificationType.LEAVE_REJECTED;
+
+        const notifTitle = status === "approved" 
+          ? "Leave Request Approved ✅" 
+          : "Leave Request Rejected ❌";
+
+        const notifMessage = status === "approved"
+          ? `Your ${leave.leaveType} leave from ${leave.startDate} to ${leave.endDate} has been approved by ${approvedBy || "Admin"}`
+          : `Your ${leave.leaveType} leave from ${leave.startDate} to ${leave.endDate} has been rejected by ${approvedBy || "Admin"}`;
+
+        await createNotification(spreadsheetId, {
+          userId: employee.id,
+          type: notifType,
+          title: notifTitle,
+          message: notifMessage,
+          data: {
+            leaveId: id,
+            leaveType: leave.leaveType,
+            startDate: leave.startDate,
+            endDate: leave.endDate,
+            status,
+            approvedBy,
+          },
+        });
+
+        // Create audit log
+        await logLeaveAction(spreadsheetId, {
+          leaveId: id,
+          employeeId: employee.id,
+          employeeName: employee.name,
+          action: status === "approved" ? "APPROVE" : "REJECT",
+          performedBy: approvedBy || "Admin",
+          performedById: approvedById || "ADMIN",
+        });
+      }
+    } catch (notifError) {
+      console.error("Error sending notification:", notifError);
+      // Don't fail the request if notification fails
+    }
+
+    // Clear leaves cache
+    cache.delete(CacheKeys.leaves());
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

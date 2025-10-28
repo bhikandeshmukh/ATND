@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addCheckInRecord } from "@/lib/googleSheets";
+import { addCheckInRecord, checkTodayAttendanceStatus } from "@/lib/googleSheets";
+import { logAttendanceChange } from "@/lib/audit/service";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { employeeName, date, inTime, inLocation, modifiedBy } = body;
+    const { employeeName, date, inTime, inLocation, modifiedBy, employeeId } = body;
 
     if (!employeeName || !date || !inTime || !inLocation) {
       return NextResponse.json(
@@ -21,6 +22,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if this is an update (for audit logging)
+    const existingStatus = await checkTodayAttendanceStatus(spreadsheetId, employeeName, date);
+    const isUpdate = existingStatus.hasCheckedIn;
+
     await addCheckInRecord(spreadsheetId, {
       date,
       employeeName,
@@ -28,6 +33,21 @@ export async function POST(request: NextRequest) {
       inLocation,
       modifiedBy: modifiedBy || undefined,
     });
+
+    // Create audit log if modified by admin
+    if (modifiedBy && employeeId) {
+      await logAttendanceChange(spreadsheetId, {
+        employeeId: employeeId,
+        employeeName: employeeName,
+        date: date,
+        fieldChanged: "Check In",
+        oldValue: isUpdate ? existingStatus.inTime : "Not checked in",
+        newValue: `${inTime} at ${inLocation}`,
+        performedBy: modifiedBy,
+        performedById: modifiedBy.includes("Admin") ? "ADMIN" : employeeId,
+        reason: "Admin modification",
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
