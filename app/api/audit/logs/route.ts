@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllAuditLogs, EntityType, AuditAction } from "@/lib/audit/service";
 
+// Mark this route as dynamic
+export const dynamic = 'force-dynamic';
+
 /**
  * Get audit logs with filters
  * GET /api/audit/logs?entityType=Attendance&action=UPDATE&startDate=2025-01-01&limit=50
@@ -12,7 +15,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Configuration error" }, { status: 500 });
         }
 
-        const { searchParams } = new URL(req.url);
+        const searchParams = req.nextUrl.searchParams;
 
         const filters = {
             entityType: searchParams.get("entityType") as EntityType | undefined,
