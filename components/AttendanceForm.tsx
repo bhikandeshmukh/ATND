@@ -344,7 +344,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
         second: '2-digit',
         hour12: true
       });
-      const currentTime = istTime;
+      const currentTime = istTime.toUpperCase(); // Convert am/pm to AM/PM
       const currentDate = getISTDate();
 
       const checkInData = {
@@ -430,7 +430,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
         second: '2-digit',
         hour12: true
       });
-      const currentTime = istTime;
+      const currentTime = istTime.toUpperCase(); // Convert am/pm to AM/PM
 
       const updatedData = {
         ...formData,
@@ -655,28 +655,6 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
           </div>
         </div>
 
-        {/* Today's Earning Display */}
-        {outTimeDone && dailyEarning > 0 && (
-          <div className="md:col-span-2">
-            <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-300 rounded-xl p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-green-200 flex items-center justify-center">
-                    <span className="text-2xl">💰</span>
-                  </div>
-                  <div>
-                    <h3 className="text-base sm:text-lg font-bold text-green-900">Today's Earning</h3>
-                    <p className="text-xs text-green-600">Based on {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m worked</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl sm:text-3xl font-bold text-green-700">₹{dailyEarning}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Check Out Section */}
         <div className="md:col-span-2">
           <div className="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -700,7 +678,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                 disabled={gettingLocation || outTimeDone || !inTimeDone}
                 className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${
                   outTimeDone
-                    ? "bg-red-500 text-white cursor-not-allowed"
+                    ? "bg-gray-400 text-white cursor-not-allowed"
                     : !inTimeDone
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl"
