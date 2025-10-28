@@ -669,7 +669,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                     : !inTimeDone
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl"
-                  } disabled:transform-none`}
+                  } disabled:bg-gray-400 disabled:transform-none`}
               >
                 {gettingLocation ? (
                   <span className="flex items-center gap-2">
