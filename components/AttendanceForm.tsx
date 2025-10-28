@@ -547,7 +547,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                 disabled={gettingLocation || inTimeDone}
                 className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${
                   inTimeDone
-                    ? "bg-green-500 text-white cursor-not-allowed"
+                    ? "bg-gray-400 text-white cursor-not-allowed"
                     : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl"
                 } disabled:bg-gray-300 disabled:transform-none`}
               >
