@@ -29,6 +29,7 @@ export default function Home() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"attendance" | "employees" | "reports" | "leaves" | "nightduty" | "notifications">("attendance");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in (from localStorage)
@@ -83,12 +84,27 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-3 sm:mb-4">
           <div className="flex items-center justify-between mb-2">
+            {/* Mobile Menu Button - Left Side */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+              aria-label="Menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+
             <div className="flex-1 text-center">
               <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
                 Attendance Tracker
               </h1>
             </div>
-            <div className="absolute right-4 top-4">
+            <div className="p-2">
               <NotificationBell userId={user.id} userName={user.name} />
             </div>
           </div>
@@ -97,7 +113,96 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mb-3 border-b border-gray-200">
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mb-3 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+            <nav className="flex flex-col">
+              <button
+                onClick={() => {
+                  setActiveTab("attendance");
+                  setMobileMenuOpen(false);
+                }}
+                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${
+                  activeTab === "attendance"
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                📋 Attendance
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("nightduty");
+                  setMobileMenuOpen(false);
+                }}
+                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${
+                  activeTab === "nightduty"
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                🌙 Night Duty
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("leaves");
+                  setMobileMenuOpen(false);
+                }}
+                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${
+                  activeTab === "leaves"
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                🏖️ Leaves
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("reports");
+                  setMobileMenuOpen(false);
+                }}
+                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${
+                  activeTab === "reports"
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                📊 {isAdmin ? "Reports" : "My Reports"}
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("notifications");
+                  setMobileMenuOpen(false);
+                }}
+                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${
+                  activeTab === "notifications"
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                🔔 Notifications
+              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    setActiveTab("employees");
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`px-4 py-3 text-left font-medium text-sm ${
+                    activeTab === "employees"
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  👥 Employees
+                </button>
+              )}
+            </nav>
+          </div>
+        )}
+
+        {/* Desktop Tabs - Hidden on Mobile */}
+        <div className="mb-3 border-b border-gray-200 hidden md:block">
           <nav className="flex justify-center space-x-4 sm:space-x-6">
             {/* Tab 1: Attendance */}
             <button
