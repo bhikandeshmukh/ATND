@@ -182,17 +182,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
     try {
       const today = getISTDate();
 
-      // First check localStorage for completion status
-      const completionKey = `attendance_${today}_${employeeName}`;
-      const isCompleted = localStorage.getItem(completionKey);
-
-      if (isCompleted === "completed") {
-        setMessage("✅ You have already completed attendance for today!");
-        setInTimeDone(true);
-        setOutTimeDone(true);
-        return;
-      }
-
+      // Always fetch from API to get latest data
       const response = await fetch("/api/attendance/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -217,6 +207,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
             setOutTimeDone(true);
             setMessage("✅ You have already completed attendance for today!");
             // Save completion status
+            const completionKey = `attendance_${today}_${employeeName}`;
             localStorage.setItem(completionKey, "completed");
           } else {
             setMessage("✅ Check In found! You can now mark Check Out.");
