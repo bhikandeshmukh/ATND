@@ -544,10 +544,10 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                 type="button"
                 onClick={handleInTimeDone}
                 disabled={gettingLocation || inTimeDone}
-                className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${inTimeDone
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl"
-                  } disabled:bg-gray-300 disabled:transform-none`}
+                className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all ${inTimeDone
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  }`}
               >
                 {gettingLocation ? (
                   <span className="flex items-center gap-2">
@@ -664,12 +664,12 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                 type="button"
                 onClick={handleOutTimeDone}
                 disabled={gettingLocation || outTimeDone || !inTimeDone}
-                className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${outTimeDone
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : !inTimeDone
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl"
-                  } disabled:bg-gray-400 disabled:transform-none`}
+                className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all ${outTimeDone
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : !inTimeDone
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  }`}
               >
                 {gettingLocation ? (
                   <span className="flex items-center gap-2">
