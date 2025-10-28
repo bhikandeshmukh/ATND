@@ -478,27 +478,65 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
 
         {/* Check In Section */}
         <div className="md:col-span-2">
-          <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-300 rounded-lg p-2 sm:p-3">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h3 className="text-sm sm:text-base font-semibold text-green-900">🟢 In</h3>
+          <div className="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  inTimeDone ? 'bg-green-100' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-6 h-6 ${inTimeDone ? 'text-green-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">Check In</h3>
+                  <p className="text-xs text-gray-500">Mark your arrival</p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={handleInTimeDone}
                 disabled={gettingLocation || inTimeDone}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold text-white transition-all ${inTimeDone
-                  ? "bg-green-600 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700 hover:shadow-lg"
-                  } disabled:bg-gray-400`}
+                className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${
+                  inTimeDone
+                    ? "bg-green-500 text-white cursor-not-allowed"
+                    : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl"
+                } disabled:bg-gray-300 disabled:transform-none`}
               >
-                {gettingLocation ? "⏳ Processing..." : inTimeDone ? "✅ Done" : "Check In"}
+                {gettingLocation ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : inTimeDone ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Checked In
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    Check In Now
+                  </span>
+                )}
               </button>
             </div>
             {inTimeDone && (
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-white rounded p-2">
-                  <span className="text-gray-600">Time:</span>
+              <div className="space-y-2 bg-green-50 rounded-lg p-3 border border-green-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs font-medium text-gray-600">Time:</span>
+                  </div>
                   {userRole === "admin" ? (
                     <input
                       type="text"
@@ -507,39 +545,54 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                         setFormData({ ...formData, inTime: e.target.value });
                         setHasEdited(true);
                       }}
-                      className="ml-2 font-semibold text-green-800 border-b border-green-300 focus:outline-none focus:border-green-600 w-32"
+                      className="text-sm font-bold text-green-700 bg-white px-2 py-1 rounded border border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500"
                       placeholder="HH:MM:SS AM/PM"
                     />
                   ) : (
-                    <span className="ml-2 font-semibold text-green-800">{formData.inTime}</span>
+                    <span className="text-sm font-bold text-green-700">{formData.inTime}</span>
                   )}
                 </div>
-                <div className="bg-white rounded p-2">
-                  <span className="text-gray-600">Date:</span>
-                  <span className="ml-2 font-semibold text-green-800">{formData.date}</span>
-                </div>
-                <div className="col-span-2 bg-white rounded p-2">
-                  <span className="text-gray-600">Location:</span>
-                  {userRole === "admin" ? (
-                    <input
-                      type="text"
-                      value={formData.inLocation}
-                      onChange={(e) => {
-                        setFormData({ ...formData, inLocation: e.target.value });
-                        setHasEdited(true);
-                      }}
-                      className="ml-2 font-mono text-xs text-green-800 border-b border-green-300 focus:outline-none focus:border-green-600 w-full"
-                      placeholder="Latitude, Longitude"
-                    />
-                  ) : (
-                    <span className="ml-2 font-mono text-xs text-green-800">{formData.inLocation}</span>
-                  )}
-                </div>
-                {locationStatus.inLocation && (
-                  <div className="col-span-2 text-xs text-green-700">
-                    ✅ Verified: {locationStatus.inLocation.distance}m from office
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs font-medium text-gray-600">Date:</span>
                   </div>
-                )}
+                  <span className="text-sm font-bold text-green-700">{formData.date}</span>
+                </div>
+                <div className="pt-2 border-t border-green-200">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-4 h-4 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-gray-600 block mb-1">Location:</span>
+                      {userRole === "admin" ? (
+                        <input
+                          type="text"
+                          value={formData.inLocation}
+                          onChange={(e) => {
+                            setFormData({ ...formData, inLocation: e.target.value });
+                            setHasEdited(true);
+                          }}
+                          className="w-full text-xs font-mono text-green-700 bg-white px-2 py-1 rounded border border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          placeholder="Latitude, Longitude"
+                        />
+                      ) : (
+                        <span className="text-xs font-mono text-green-700 break-all">{formData.inLocation}</span>
+                      )}
+                    </div>
+                  </div>
+                  {locationStatus.inLocation && (
+                    <div className="mt-2 flex items-center gap-1 text-xs text-green-700 bg-white px-2 py-1 rounded">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Verified: {locationStatus.inLocation.distance}m from office
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -547,27 +600,74 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
 
         {/* Check Out Section */}
         <div className="md:col-span-2">
-          <div className="bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 rounded-lg p-2 sm:p-3">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h3 className="text-sm sm:text-base font-semibold text-red-900">🔴 Out</h3>
+          <div className="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  outTimeDone ? 'bg-red-100' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-6 h-6 ${outTimeDone ? 'text-red-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">Check Out</h3>
+                  <p className="text-xs text-gray-500">Mark your departure</p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={handleOutTimeDone}
-                disabled={gettingLocation || outTimeDone}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold text-white transition-all ${outTimeDone
-                  ? "bg-red-600 cursor-not-allowed"
-                  : "bg-red-600 hover:bg-red-700 hover:shadow-lg"
-                  } disabled:bg-gray-400`}
+                disabled={gettingLocation || outTimeDone || !inTimeDone}
+                className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${
+                  outTimeDone
+                    ? "bg-red-500 text-white cursor-not-allowed"
+                    : !inTimeDone
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl"
+                } disabled:transform-none`}
               >
-                {gettingLocation ? "⏳ Processing..." : outTimeDone ? "✅ Done" : "Check Out"}
+                {gettingLocation ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : outTimeDone ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Checked Out
+                  </span>
+                ) : !inTimeDone ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Check In First
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Check Out Now
+                  </span>
+                )}
               </button>
             </div>
             {outTimeDone && (
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-white rounded p-2">
-                  <span className="text-gray-600">Time:</span>
+              <div className="space-y-2 bg-red-50 rounded-lg p-3 border border-red-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs font-medium text-gray-600">Time:</span>
+                  </div>
                   {userRole === "admin" ? (
                     <input
                       type="text"
@@ -576,39 +676,54 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                         setFormData({ ...formData, outTime: e.target.value });
                         setHasEdited(true);
                       }}
-                      className="ml-2 font-semibold text-red-800 border-b border-red-300 focus:outline-none focus:border-red-600 w-32"
+                      className="text-sm font-bold text-red-700 bg-white px-2 py-1 rounded border border-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
                       placeholder="HH:MM:SS AM/PM"
                     />
                   ) : (
-                    <span className="ml-2 font-semibold text-red-800">{formData.outTime}</span>
+                    <span className="text-sm font-bold text-red-700">{formData.outTime}</span>
                   )}
                 </div>
-                <div className="bg-white rounded p-2">
-                  <span className="text-gray-600">Date:</span>
-                  <span className="ml-2 font-semibold text-red-800">{formData.date}</span>
-                </div>
-                <div className="col-span-2 bg-white rounded p-2">
-                  <span className="text-gray-600">Location:</span>
-                  {userRole === "admin" ? (
-                    <input
-                      type="text"
-                      value={formData.outLocation}
-                      onChange={(e) => {
-                        setFormData({ ...formData, outLocation: e.target.value });
-                        setHasEdited(true);
-                      }}
-                      className="ml-2 font-mono text-xs text-red-800 border-b border-red-300 focus:outline-none focus:border-red-600 w-full"
-                      placeholder="Latitude, Longitude"
-                    />
-                  ) : (
-                    <span className="ml-2 font-mono text-xs text-red-800">{formData.outLocation}</span>
-                  )}
-                </div>
-                {locationStatus.outLocation && (
-                  <div className="col-span-2 text-xs text-red-700">
-                    ✅ Verified: {locationStatus.outLocation.distance}m from office
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs font-medium text-gray-600">Date:</span>
                   </div>
-                )}
+                  <span className="text-sm font-bold text-red-700">{formData.date}</span>
+                </div>
+                <div className="pt-2 border-t border-red-200">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-4 h-4 text-red-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-gray-600 block mb-1">Location:</span>
+                      {userRole === "admin" ? (
+                        <input
+                          type="text"
+                          value={formData.outLocation}
+                          onChange={(e) => {
+                            setFormData({ ...formData, outLocation: e.target.value });
+                            setHasEdited(true);
+                          }}
+                          className="w-full text-xs font-mono text-red-700 bg-white px-2 py-1 rounded border border-red-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                          placeholder="Latitude, Longitude"
+                        />
+                      ) : (
+                        <span className="text-xs font-mono text-red-700 break-all">{formData.outLocation}</span>
+                      )}
+                    </div>
+                  </div>
+                  {locationStatus.outLocation && (
+                    <div className="mt-2 flex items-center gap-1 text-xs text-red-700 bg-white px-2 py-1 rounded">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Verified: {locationStatus.outLocation.distance}m from office
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

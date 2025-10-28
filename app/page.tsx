@@ -122,11 +122,10 @@ export default function Home() {
                   setActiveTab("attendance");
                   setMobileMenuOpen(false);
                 }}
-                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${
-                  activeTab === "attendance"
+                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${activeTab === "attendance"
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 📋 Attendance
               </button>
@@ -135,11 +134,10 @@ export default function Home() {
                   setActiveTab("nightduty");
                   setMobileMenuOpen(false);
                 }}
-                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${
-                  activeTab === "nightduty"
+                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${activeTab === "nightduty"
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 🌙 Night Duty
               </button>
@@ -148,11 +146,10 @@ export default function Home() {
                   setActiveTab("leaves");
                   setMobileMenuOpen(false);
                 }}
-                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${
-                  activeTab === "leaves"
+                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${activeTab === "leaves"
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 🏖️ Leaves
               </button>
@@ -161,11 +158,10 @@ export default function Home() {
                   setActiveTab("reports");
                   setMobileMenuOpen(false);
                 }}
-                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${
-                  activeTab === "reports"
+                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${activeTab === "reports"
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 📊 {isAdmin ? "Reports" : "My Reports"}
               </button>
@@ -174,11 +170,10 @@ export default function Home() {
                   setActiveTab("notifications");
                   setMobileMenuOpen(false);
                 }}
-                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${
-                  activeTab === "notifications"
+                className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${activeTab === "notifications"
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 🔔 Notifications
               </button>
@@ -188,11 +183,10 @@ export default function Home() {
                     setActiveTab("employees");
                     setMobileMenuOpen(false);
                   }}
-                  className={`px-4 py-3 text-left font-medium text-sm ${
-                    activeTab === "employees"
+                  className={`px-4 py-3 text-left font-medium text-sm ${activeTab === "employees"
                       ? "bg-blue-50 text-blue-600"
                       : "text-gray-700 hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   👥 Employees
                 </button>
