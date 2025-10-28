@@ -11,6 +11,10 @@ interface AttendanceFormProps {
 
 export default function AttendanceForm({ onRecordAdded, userRole, userName }: AttendanceFormProps) {
   const [employees, setEmployees] = useState<any[]>([]);
+  const [selectedEmployeeData, setSelectedEmployeeData] = useState<any>(null);
+  const [dailyEarning, setDailyEarning] = useState<number>(0);
+  const [totalMinutes, setTotalMinutes] = useState<number>(0);
+  
   // Get Indian Standard Time (IST) date
   const getISTDate = () => {
     const now = new Date();
@@ -80,6 +84,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
         if (userRole === "user" && userName && employeeList.length > 0) {
           const userEmployee = employeeList.find((emp: any) => emp.name === userName);
           if (userEmployee) {
+            setSelectedEmployeeData(userEmployee);
             setFormData(prev => ({
               ...prev,
               employeeName: userEmployee.name,
@@ -246,6 +251,56 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
     outLocation: { allowed: boolean; distance: number } | null;
   }>({ inLocation: null, outLocation: null });
   const [hasEdited, setHasEdited] = useState(false);
+
+  // Calculate daily earning based on time worked
+  const calculateEarning = (inTime: string, outTime: string, employeeData: any) => {
+    if (!inTime || !outTime || !employeeData) return { minutes: 0, earning: 0 };
+
+    try {
+      // Parse times
+      const parseTime = (timeStr: string) => {
+        const [time, period] = timeStr.split(' ');
+        let [hours, minutes, seconds] = time.split(':').map(Number);
+        
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        
+        return hours * 60 + minutes;
+      };
+
+      const inMinutes = parseTime(inTime);
+      const outMinutes = parseTime(outTime);
+      
+      let totalMins = outMinutes - inMinutes;
+      if (totalMins < 0) totalMins += 24 * 60; // Handle overnight shift
+
+      // Calculate earning
+      let earning = 0;
+      if (employeeData.perMinuteRate && employeeData.perMinuteRate > 0) {
+        earning = totalMins * employeeData.perMinuteRate;
+      } else if (employeeData.fixedSalary && employeeData.fixedSalary > 0 && employeeData.totalWorkingDays) {
+        const dailySalary = employeeData.fixedSalary / employeeData.totalWorkingDays;
+        earning = dailySalary;
+      }
+
+      return { minutes: totalMins, earning: Math.round(earning) };
+    } catch (error) {
+      console.error("Error calculating earning:", error);
+      return { minutes: 0, earning: 0 };
+    }
+  };
+
+  // Update earning when both times are available
+  useEffect(() => {
+    if (formData.inTime && formData.outTime && selectedEmployeeData) {
+      const { minutes, earning } = calculateEarning(formData.inTime, formData.outTime, selectedEmployeeData);
+      setTotalMinutes(minutes);
+      setDailyEarning(earning);
+    } else {
+      setTotalMinutes(0);
+      setDailyEarning(0);
+    }
+  }, [formData.inTime, formData.outTime, selectedEmployeeData]);
 
   const handleInTimeDone = async () => {
     // Check if attendance is already completed for today
@@ -451,6 +506,8 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
             value={formData.employeeName}
             onChange={(e) => {
               const selectedName = e.target.value;
+              const empData = employees.find(emp => emp.name === selectedName);
+              setSelectedEmployeeData(empData || null);
               setFormData({ ...formData, employeeName: selectedName });
 
               // Check attendance status for selected employee (for admin)
@@ -598,6 +655,28 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
           </div>
         </div>
 
+        {/* Today's Earning Display */}
+        {outTimeDone && dailyEarning > 0 && (
+          <div className="md:col-span-2">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-300 rounded-xl p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-green-200 flex items-center justify-center">
+                    <span className="text-2xl">💰</span>
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-green-900">Today's Earning</h3>
+                    <p className="text-xs text-green-600">Based on {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m worked</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl sm:text-3xl font-bold text-green-700">₹{dailyEarning}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Check Out Section */}
         <div className="md:col-span-2">
           <div className="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -729,6 +808,55 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
 
           </div>
         </div>
+
+        {/* Daily Earning Display */}
+        {inTimeDone && outTimeDone && dailyEarning > 0 && (
+          <div className="md:col-span-2">
+            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-xl p-4 shadow-md">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-yellow-900">Today's Earning</h3>
+                    <p className="text-xs text-yellow-700">Based on time worked</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl sm:text-3xl font-bold text-yellow-900">
+                    ₹{dailyEarning.toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-xs text-yellow-700 mt-1">
+                    {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m worked
+                  </div>
+                </div>
+              </div>
+              {selectedEmployeeData && (
+                <div className="mt-3 pt-3 border-t border-yellow-200">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-white rounded px-2 py-1">
+                      <span className="text-gray-600">Rate:</span>
+                      <span className="ml-1 font-semibold text-yellow-800">
+                        {selectedEmployeeData.perMinuteRate > 0 
+                          ? `₹${selectedEmployeeData.perMinuteRate}/min`
+                          : `₹${selectedEmployeeData.fixedSalary}/month`
+                        }
+                      </span>
+                    </div>
+                    <div className="bg-white rounded px-2 py-1">
+                      <span className="text-gray-600">Total Minutes:</span>
+                      <span className="ml-1 font-semibold text-yellow-800">{totalMinutes} mins</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {userRole === "admin" && hasEdited && (inTimeDone || outTimeDone) && (

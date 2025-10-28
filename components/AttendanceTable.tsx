@@ -4,12 +4,26 @@ import { AttendanceRecord } from "@/lib/types";
 
 interface AttendanceTableProps {
   records: AttendanceRecord[];
+  employees?: any[];
 }
 
-export default function AttendanceTable({ records }: AttendanceTableProps) {
+export default function AttendanceTable({ records, employees = [] }: AttendanceTableProps) {
   if (!Array.isArray(records) || records.length === 0) {
     return <p className="text-gray-600">No attendance records for this month.</p>;
   }
+
+  // Calculate daily earning for each record
+  const calculateDailyEarning = (record: AttendanceRecord) => {
+    const employee = employees.find(emp => emp.name === record.employeeName);
+    if (!employee || !record.totalMinutes) return 0;
+
+    if (employee.perMinuteRate && employee.perMinuteRate > 0) {
+      return Math.round(record.totalMinutes * employee.perMinuteRate);
+    } else if (employee.fixedSalary && employee.fixedSalary > 0 && employee.totalWorkingDays) {
+      return Math.round(employee.fixedSalary / employee.totalWorkingDays);
+    }
+    return 0;
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -40,37 +54,46 @@ export default function AttendanceTable({ records }: AttendanceTableProps) {
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Total Hours
             </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Daily Earning
+            </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {records.map((record, index) => (
-            <tr key={index} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {record.date}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {record.employeeName}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {record.inTime}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {record.outTime}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {record.inLocation || "Not captured"}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {record.outLocation || "Not captured"}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {record.totalMinutes}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {record.totalHours}
-              </td>
-            </tr>
-          ))}
+          {records.map((record, index) => {
+            const dailyEarning = calculateDailyEarning(record);
+            return (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {record.date}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {record.employeeName}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {record.inTime}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {record.outTime}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {record.inLocation || "Not captured"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {record.outLocation || "Not captured"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {record.totalMinutes}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {record.totalHours}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-700">
+                  {dailyEarning > 0 ? `₹${dailyEarning}` : '-'}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

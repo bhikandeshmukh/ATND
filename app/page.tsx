@@ -123,8 +123,8 @@ export default function Home() {
                   setMobileMenuOpen(false);
                 }}
                 className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${activeTab === "attendance"
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-700 hover:bg-gray-50"
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-700 hover:bg-gray-50"
                   }`}
               >
                 📋 Attendance
@@ -135,8 +135,8 @@ export default function Home() {
                   setMobileMenuOpen(false);
                 }}
                 className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${activeTab === "nightduty"
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-700 hover:bg-gray-50"
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-700 hover:bg-gray-50"
                   }`}
               >
                 🌙 Night Duty
@@ -147,8 +147,8 @@ export default function Home() {
                   setMobileMenuOpen(false);
                 }}
                 className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${activeTab === "leaves"
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-700 hover:bg-gray-50"
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-700 hover:bg-gray-50"
                   }`}
               >
                 🏖️ Leaves
@@ -159,8 +159,8 @@ export default function Home() {
                   setMobileMenuOpen(false);
                 }}
                 className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${activeTab === "reports"
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-700 hover:bg-gray-50"
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-700 hover:bg-gray-50"
                   }`}
               >
                 📊 {isAdmin ? "Reports" : "My Reports"}
@@ -171,8 +171,8 @@ export default function Home() {
                   setMobileMenuOpen(false);
                 }}
                 className={`px-4 py-3 text-left font-medium text-sm border-b border-gray-100 ${activeTab === "notifications"
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-700 hover:bg-gray-50"
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-700 hover:bg-gray-50"
                   }`}
               >
                 🔔 Notifications
@@ -184,8 +184,8 @@ export default function Home() {
                     setMobileMenuOpen(false);
                   }}
                   className={`px-4 py-3 text-left font-medium text-sm ${activeTab === "employees"
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-gray-700 hover:bg-gray-50"
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-50"
                     }`}
                 >
                   👥 Employees

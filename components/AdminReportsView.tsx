@@ -138,7 +138,7 @@ export default function AdminReportsView() {
                 Detailed Records
                 {selectedEmployee !== "all" && ` - ${selectedEmployee}`}
               </h3>
-              <AttendanceTable records={records} />
+              <AttendanceTable records={records} employees={employees} />
             </div>
           </>
         ) : (

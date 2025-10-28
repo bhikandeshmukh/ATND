@@ -123,7 +123,7 @@ export default function UserReportsView({ userName }: UserReportsViewProps) {
             <MonthlyReportSummary records={records} employees={employees} />
             <div className="mt-3 sm:mt-4">
               <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-2 sm:mb-3">Detailed Records</h3>
-              <AttendanceTable records={records} />
+              <AttendanceTable records={records} employees={employees} />
             </div>
           </>
         ) : (
