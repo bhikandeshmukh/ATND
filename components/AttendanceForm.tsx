@@ -14,7 +14,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
   const [selectedEmployeeData, setSelectedEmployeeData] = useState<any>(null);
   const [dailyEarning, setDailyEarning] = useState<number>(0);
   const [totalMinutes, setTotalMinutes] = useState<number>(0);
-  
+
   // Get Indian Standard Time (IST) date
   const getISTDate = () => {
     const now = new Date();
@@ -252,16 +252,16 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
       const parseTime = (timeStr: string) => {
         const [time, period] = timeStr.split(' ');
         let [hours, minutes, seconds] = time.split(':').map(Number);
-        
+
         if (period === 'PM' && hours !== 12) hours += 12;
         if (period === 'AM' && hours === 12) hours = 0;
-        
+
         return hours * 60 + minutes;
       };
 
       const inMinutes = parseTime(inTime);
       const outMinutes = parseTime(outTime);
-      
+
       let totalMins = outMinutes - inMinutes;
       if (totalMins < 0) totalMins += 24 * 60; // Handle overnight shift
 
@@ -529,9 +529,8 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
           <div className="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  inTimeDone ? 'bg-green-100' : 'bg-gray-100'
-                }`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${inTimeDone ? 'bg-green-100' : 'bg-gray-100'
+                  }`}>
                   <svg className={`w-6 h-6 ${inTimeDone ? 'text-green-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                   </svg>
@@ -545,11 +544,10 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                 type="button"
                 onClick={handleInTimeDone}
                 disabled={gettingLocation || inTimeDone}
-                className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${
-                  inTimeDone
+                className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${inTimeDone
                     ? "bg-gray-400 text-white cursor-not-allowed"
                     : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl"
-                } disabled:bg-gray-300 disabled:transform-none`}
+                  } disabled:bg-gray-300 disabled:transform-none`}
               >
                 {gettingLocation ? (
                   <span className="flex items-center gap-2">
@@ -571,7 +569,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                     </svg>
-                    Check In Now
+                    Check In
                   </span>
                 )}
               </button>
@@ -651,9 +649,8 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
           <div className="bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  outTimeDone ? 'bg-red-100' : 'bg-gray-100'
-                }`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${outTimeDone ? 'bg-red-100' : 'bg-gray-100'
+                  }`}>
                   <svg className={`w-6 h-6 ${outTimeDone ? 'text-red-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
@@ -667,13 +664,12 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                 type="button"
                 onClick={handleOutTimeDone}
                 disabled={gettingLocation || outTimeDone || !inTimeDone}
-                className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${
-                  outTimeDone
+                className={`relative px-6 py-3 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${outTimeDone
                     ? "bg-gray-400 text-white cursor-not-allowed"
                     : !inTimeDone
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl"
-                } disabled:transform-none`}
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl"
+                  } disabled:transform-none`}
               >
                 {gettingLocation ? (
                   <span className="flex items-center gap-2">
@@ -702,7 +698,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    Check Out Now
+                    Check Out
                   </span>
                 )}
               </button>
@@ -810,7 +806,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
                     <div className="bg-white rounded px-2 py-1">
                       <span className="text-gray-600">Rate:</span>
                       <span className="ml-1 font-semibold text-yellow-800">
-                        {selectedEmployeeData.perMinuteRate > 0 
+                        {selectedEmployeeData.perMinuteRate > 0
                           ? `₹${selectedEmployeeData.perMinuteRate}/min`
                           : `₹${selectedEmployeeData.fixedSalary}/month`
                         }
