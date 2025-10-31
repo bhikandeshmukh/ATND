@@ -127,7 +127,10 @@ export default function Home() {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
           <button
-            onClick={() => setActiveTab("attendance")}
+            onClick={() => {
+              setActiveTab("attendance");
+              setSidebarOpen(false);
+            }}
             className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-600 transition-colors ${activeTab === "attendance" ? "bg-slate-600 border-l-4 border-blue-500" : ""}`}
             title="Attendance"
           >
@@ -136,7 +139,10 @@ export default function Home() {
           </button>
 
           <button
-            onClick={() => setActiveTab("nightduty")}
+            onClick={() => {
+              setActiveTab("nightduty");
+              setSidebarOpen(false);
+            }}
             className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-600 transition-colors ${activeTab === "nightduty" ? "bg-slate-600 border-l-4 border-blue-500" : ""}`}
             title="Night Duty"
           >
@@ -145,7 +151,10 @@ export default function Home() {
           </button>
 
           <button
-            onClick={() => setActiveTab("leaves")}
+            onClick={() => {
+              setActiveTab("leaves");
+              setSidebarOpen(false);
+            }}
             className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-600 transition-colors ${activeTab === "leaves" ? "bg-slate-600 border-l-4 border-blue-500" : ""}`}
             title="Leaves"
           >
@@ -154,7 +163,10 @@ export default function Home() {
           </button>
 
           <button
-            onClick={() => setActiveTab("reports")}
+            onClick={() => {
+              setActiveTab("reports");
+              setSidebarOpen(false);
+            }}
             className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-600 transition-colors ${activeTab === "reports" ? "bg-slate-600 border-l-4 border-blue-500" : ""}`}
             title="Reports"
           >
@@ -163,7 +175,10 @@ export default function Home() {
           </button>
 
           <button
-            onClick={() => setActiveTab("notifications")}
+            onClick={() => {
+              setActiveTab("notifications");
+              setSidebarOpen(false);
+            }}
             className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-600 transition-colors ${activeTab === "notifications" ? "bg-slate-600 border-l-4 border-blue-500" : ""}`}
             title="Notifications"
           >
@@ -174,7 +189,10 @@ export default function Home() {
           {isAdmin && (
             <>
               <button
-                onClick={() => setActiveTab("employees")}
+                onClick={() => {
+                  setActiveTab("employees");
+                  setSidebarOpen(false);
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-600 transition-colors ${activeTab === "employees" ? "bg-slate-600 border-l-4 border-blue-500" : ""}`}
                 title="Employees"
               >
@@ -183,7 +201,10 @@ export default function Home() {
               </button>
 
               <button
-                onClick={() => setActiveTab("import")}
+                onClick={() => {
+                  setActiveTab("import");
+                  setSidebarOpen(false);
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-600 transition-colors ${activeTab === "import" ? "bg-slate-600 border-l-4 border-blue-500" : ""}`}
                 title="Import Data"
               >

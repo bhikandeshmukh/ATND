@@ -40,13 +40,13 @@ export async function PUT(request: NextRequest) {
 
       if (employee) {
         const isApproved = status.toLowerCase() === "approved";
-        
+
         const notifType = isApproved
-          ? NotificationType.LEAVE_APPROVED 
+          ? NotificationType.LEAVE_APPROVED
           : NotificationType.LEAVE_REJECTED;
 
         const notifTitle = isApproved
-          ? "Leave Request Approved ✅" 
+          ? "Leave Request Approved ✅"
           : "Leave Request Rejected ❌";
 
         const notifMessage = isApproved
