@@ -36,15 +36,17 @@ export async function PUT(req: NextRequest) {
       const employee = employees.find((emp) => emp.name === nightDutyRequest.employeeName);
 
       if (employee) {
-        const notifType = status === "approved" 
+        const isApproved = status.toLowerCase() === "approved";
+        
+        const notifType = isApproved
           ? NotificationType.NIGHT_DUTY_APPROVED 
           : NotificationType.NIGHT_DUTY_REJECTED;
 
-        const notifTitle = status === "approved" 
+        const notifTitle = isApproved
           ? "Night Duty Approved ✅" 
           : "Night Duty Rejected ❌";
 
-        const notifMessage = status === "approved"
+        const notifMessage = isApproved
           ? `Your night duty request for ${nightDutyRequest.date} has been approved by ${approvedBy || "Admin"}. Attendance has been automatically recorded.`
           : `Your night duty request for ${nightDutyRequest.date} has been rejected by ${approvedBy || "Admin"}`;
 
@@ -64,11 +66,12 @@ export async function PUT(req: NextRequest) {
           });
 
           // Create audit log
+          const auditAction = status.toLowerCase() === "approved" ? "APPROVE" : "REJECT";
           await logNightDutyAction(spreadsheetId, {
             requestId: id,
             employeeId: employee.id || '',
             employeeName: employee.name,
-            action: status === "approved" ? "APPROVE" : "REJECT",
+            action: auditAction,
             performedBy: approvedBy || "Admin",
             performedById: approvedById || "ADMIN",
           });

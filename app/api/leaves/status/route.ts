@@ -39,15 +39,17 @@ export async function PUT(request: NextRequest) {
       const employee = employees.find((emp) => emp.name === leave.employeeName);
 
       if (employee) {
-        const notifType = status === "approved" 
+        const isApproved = status.toLowerCase() === "approved";
+        
+        const notifType = isApproved
           ? NotificationType.LEAVE_APPROVED 
           : NotificationType.LEAVE_REJECTED;
 
-        const notifTitle = status === "approved" 
+        const notifTitle = isApproved
           ? "Leave Request Approved ✅" 
           : "Leave Request Rejected ❌";
 
-        const notifMessage = status === "approved"
+        const notifMessage = isApproved
           ? `Your ${leave.leaveType} leave from ${leave.startDate} to ${leave.endDate} has been approved by ${approvedBy || "Admin"}`
           : `Your ${leave.leaveType} leave from ${leave.startDate} to ${leave.endDate} has been rejected by ${approvedBy || "Admin"}`;
 
@@ -69,11 +71,12 @@ export async function PUT(request: NextRequest) {
           });
 
           // Create audit log
+          const auditAction = isApproved ? "APPROVE" : "REJECT";
           await logLeaveAction(spreadsheetId, {
             leaveId: id,
             employeeId: employee.id || '',
             employeeName: employee.name,
-            action: status === "approved" ? "APPROVE" : "REJECT",
+            action: auditAction,
             performedBy: approvedBy || "Admin",
             performedById: approvedById || "ADMIN",
           });
