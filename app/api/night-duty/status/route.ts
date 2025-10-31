@@ -4,6 +4,7 @@ import { getAllEmployees } from "@/lib/firebase/employees";
 import { createNotification, NotificationType } from "@/lib/notifications/service";
 import { logNightDutyAction } from "@/lib/audit/service";
 import { cache, CacheKeys } from "@/lib/cache/simple-cache";
+import { addCheckIn, updateCheckOut } from "@/lib/firebase/attendance";
 
 export async function PUT(req: NextRequest) {
   try {
@@ -30,6 +31,34 @@ export async function PUT(req: NextRequest) {
 
     await updateNightDutyStatus(id, status, approvedBy);
 
+    // If approved, automatically add attendance
+    if (status.toLowerCase() === "approved") {
+      try {
+        // Add check-in at 9:00 PM
+        await addCheckIn({
+          date: nightDutyRequest.date,
+          employeeName: nightDutyRequest.employeeName,
+          inTime: "09:00:00 PM",
+          inLocation: "Night Duty - Auto Approved",
+          modifiedBy: `Auto: ${approvedBy || "Admin"}`,
+        });
+
+        // Add check-out at 7:00 AM (next day)
+        await updateCheckOut(
+          nightDutyRequest.employeeName,
+          nightDutyRequest.date,
+          "07:00:00 AM",
+          "Night Duty - Auto Approved",
+          `Auto: ${approvedBy || "Admin"}`
+        );
+
+        console.log(`✅ Auto-attendance added for ${nightDutyRequest.employeeName} on ${nightDutyRequest.date}`);
+      } catch (attendanceError) {
+        console.error("Error adding auto-attendance:", attendanceError);
+        // Don't fail the approval if attendance fails
+      }
+    }
+
     // Send notification to employee
     try {
       const employees = await getAllEmployees();
@@ -47,7 +76,7 @@ export async function PUT(req: NextRequest) {
           : "Night Duty Rejected ❌";
 
         const notifMessage = isApproved
-          ? `Your night duty request for ${nightDutyRequest.date} has been approved by ${approvedBy || "Admin"}. Attendance has been automatically recorded.`
+          ? `Your night duty request for ${nightDutyRequest.date} has been approved by ${approvedBy || "Admin"}. ✅ Attendance automatically recorded (9:00 PM - 7:00 AM).`
           : `Your night duty request for ${nightDutyRequest.date} has been rejected by ${approvedBy || "Admin"}`;
 
         const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
