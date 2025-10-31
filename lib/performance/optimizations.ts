@@ -157,7 +157,9 @@ export class VirtualDataStore<T> {
   set(index: number, value: T) {
     if (this.data.size >= this.maxSize) {
       const firstKey = this.data.keys().next().value;
-      this.data.delete(firstKey);
+      if (firstKey !== undefined) {
+        this.data.delete(firstKey);
+      }
     }
     this.data.set(index, value);
   }
