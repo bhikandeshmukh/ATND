@@ -46,7 +46,7 @@ export default function LocationTracker({ userId, userName, userRole }: Location
     };
 
     const initialized = await backgroundTracker.initialize(officeConfig);
-    
+
     if (!initialized) {
       alert('❌ Failed to initialize tracking. Please enable location and notification permissions.');
       return;
@@ -71,8 +71,8 @@ export default function LocationTracker({ userId, userName, userRole }: Location
           <div>
             <h3 className="font-semibold text-gray-900">Location Tracking</h3>
             <p className="text-xs text-gray-600">
-              {isTracking 
-                ? '🟢 Active - Monitoring your location' 
+              {isTracking
+                ? '🟢 Active - Monitoring your location'
                 : '⚪ Inactive - Click to enable'}
             </p>
           </div>
@@ -84,7 +84,7 @@ export default function LocationTracker({ userId, userName, userRole }: Location
               ⚠️ Permission needed
             </span>
           )}
-          
+
           {isTracking ? (
             <button
               onClick={handleStopTracking}

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { getCurrentLocation, isWithinOfficeRadius, getOfficeLocation } from "@/lib/geofence";
 import { backgroundTracker } from "@/lib/geofencing/background-tracker";
 import { pushNotificationService } from "@/lib/notifications/push-service";
+import RealTimeEarning from "./RealTimeEarning";
 
 interface AttendanceFormProps {
   onRecordAdded: () => void;
@@ -503,8 +504,13 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
       });
 
       if (response.ok) {
-        alert(`✅ Check Out Successful!\n\nCheck In: ${data.inTime}\nCheck Out: ${data.outTime}\nDate: ${data.date}`);
-        setMessage("✅ Attendance completed for today! See you tomorrow.");
+        // Calculate final earning
+        const { minutes, earning } = calculateEarning(data.inTime, data.outTime, selectedEmployeeData);
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        
+        alert(`✅ Check Out Successful!\n\nCheck In: ${data.inTime}\nCheck Out: ${data.outTime}\nDate: ${data.date}\n\n💰 Final Earning: ₹${earning.toLocaleString('en-IN')}\n⏱️ Total Time: ${hours}h ${mins}m`);
+        setMessage(`✅ Attendance completed! Final Earning: ₹${earning.toLocaleString('en-IN')} (${hours}h ${mins}m)`);
 
         // Save completion status for today
         const today = getISTDate();
@@ -532,6 +538,17 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
 
   return (
     <div className="space-y-3">
+      {/* Real-Time Earning Display - Show after check-in */}
+      {inTimeDone && !outTimeDone && selectedEmployeeData && formData.inTime && (
+        <RealTimeEarning
+          employeeName={formData.employeeName}
+          checkInTime={formData.inTime}
+          checkInDate={formData.date}
+          perMinuteRate={selectedEmployeeData.perMinuteRate}
+          fixedSalary={selectedEmployeeData.fixedSalary}
+          totalWorkingDays={selectedEmployeeData.totalWorkingDays}
+        />
+      )}
 
       <div className="grid grid-cols-1 gap-3 mb-3">
         <div>
