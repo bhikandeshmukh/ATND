@@ -76,7 +76,7 @@ async function checkLateArrival(employeeName: string, inTime: string, employeeId
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { employeeName, date, inTime, inLocation, modifiedBy, employeeId } = body;
+    const { employeeName, date, inTime, inLocation, modifiedBy, employeeId, isNightDuty } = body;
 
     if (!employeeName || !date || !inTime || !inLocation) {
       return NextResponse.json(
@@ -89,11 +89,16 @@ export async function POST(request: NextRequest) {
     const existingStatus = await getAttendanceStatus(employeeName, date);
     const isUpdate = existingStatus.hasCheckedIn;
 
+    // For night duty, use fixed time (9:00 PM) for attendance sheet
+    // But store real time in backend for tracking
+    const displayTime = isNightDuty ? "09:00:00 PM" : inTime;
+    const realTimeLocation = isNightDuty ? `${inLocation} (Real: ${inTime})` : inLocation;
+
     await addCheckIn({
       date,
       employeeName,
-      inTime,
-      inLocation,
+      inTime: displayTime,
+      inLocation: realTimeLocation,
       modifiedBy: modifiedBy || undefined,
     });
 

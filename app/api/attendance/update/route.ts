@@ -75,7 +75,7 @@ async function checkEarlyLeave(employeeName: string, outTime: string) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { employeeName, date, outTime, outLocation, modifiedBy } = body;
+    const { employeeName, date, outTime, outLocation, modifiedBy, isNightDuty } = body;
 
     if (!employeeName || !date || !outTime || !outLocation) {
       return NextResponse.json(
@@ -84,11 +84,16 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // For night duty, use fixed time (7:00 AM) for attendance sheet
+    // But store real time in backend for tracking
+    const displayTime = isNightDuty ? "07:00:00 AM" : outTime;
+    const realTimeLocation = isNightDuty ? `${outLocation} (Real: ${outTime})` : outLocation;
+
     await updateCheckOut(
       employeeName,
       date,
-      outTime,
-      outLocation,
+      displayTime,
+      realTimeLocation,
       modifiedBy || undefined
     );
 

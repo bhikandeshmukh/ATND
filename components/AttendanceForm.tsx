@@ -17,6 +17,8 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
   const [selectedEmployeeData, setSelectedEmployeeData] = useState<any>(null);
   const [dailyEarning, setDailyEarning] = useState<number>(0);
   const [totalMinutes, setTotalMinutes] = useState<number>(0);
+  const [isNightDuty, setIsNightDuty] = useState<boolean>(false);
+  const [checkInTimestamp, setCheckInTimestamp] = useState<number | null>(null);
 
   // Get Indian Standard Time (IST) date
   const getISTDate = () => {
@@ -181,9 +183,35 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
     }
   };
 
+  // Check if employee has approved night duty for today
+  const checkNightDutyStatus = async (employeeName: string, date: string) => {
+    try {
+      const response = await fetch("/api/night-duty");
+      const nightDutyRequests = await response.json();
+      
+      if (Array.isArray(nightDutyRequests)) {
+        const approvedNightDuty = nightDutyRequests.find(
+          (req: any) => 
+            req.employeeName === employeeName && 
+            req.date === date && 
+            req.status.toLowerCase() === "approved"
+        );
+        
+        setIsNightDuty(!!approvedNightDuty);
+        return !!approvedNightDuty;
+      }
+    } catch (error) {
+      console.error("Error checking night duty status:", error);
+    }
+    return false;
+  };
+
   const checkAttendanceStatus = async (employeeName: string) => {
     try {
       const today = getISTDate();
+
+      // Check if this is a night duty day
+      await checkNightDutyStatus(employeeName, today);
 
       // Always fetch from API to get latest data
       const response = await fetch("/api/attendance/status", {
@@ -384,6 +412,7 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
         inTime: currentTime,
         inLocation: locationString,
         modifiedBy: userRole === "admin" ? userName : undefined,
+        isNightDuty: isNightDuty,
       };
 
       // Submit check-in to sheet
@@ -394,16 +423,21 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
       });
 
       if (response.ok) {
+        // Store check-in timestamp for 1-hour restriction
+        setCheckInTimestamp(Date.now());
+        
+        const displayTime = isNightDuty ? "09:00:00 PM" : currentTime;
         setFormData(prev => ({
           ...prev,
           date: currentDate,
-          inTime: currentTime,
+          inTime: displayTime,
           inLocation: locationString,
         }));
 
         setInTimeDone(true);
-        alert(`✅ Check In Successful!\n\nTime: ${currentTime}\nDate: ${currentDate}`);
-        setMessage(`✅ Check In recorded at ${currentTime}`);
+        const nightDutyMsg = isNightDuty ? "\n🌙 Night Duty - Attendance will show 9:00 PM - 7:00 AM" : "";
+        alert(`✅ Check In Successful!\n\nTime: ${currentTime}${nightDutyMsg}\nDate: ${currentDate}`);
+        setMessage(`✅ Check In recorded at ${currentTime}${isNightDuty ? " (Night Duty)" : ""}`);
         
         // Auto-enable location tracking on check-in
         await startLocationTracking();
@@ -437,6 +471,19 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
     if (outTimeDone) {
       setMessage("⚠️ You have already marked Check Out today!");
       return;
+    }
+
+    // Check 1-hour restriction
+    if (checkInTimestamp) {
+      const oneHourInMs = 60 * 60 * 1000; // 1 hour in milliseconds
+      const timeSinceCheckIn = Date.now() - checkInTimestamp;
+      
+      if (timeSinceCheckIn < oneHourInMs) {
+        const remainingMinutes = Math.ceil((oneHourInMs - timeSinceCheckIn) / (60 * 1000));
+        alert(`⏰ Please wait ${remainingMinutes} more minutes before checking out.\n\nYou must work at least 1 hour after check-in.`);
+        setMessage(`⏰ Check-out available in ${remainingMinutes} minutes`);
+        return;
+      }
     }
 
     setGettingLocation(true);
@@ -500,17 +547,21 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
           outTime: data.outTime,
           outLocation: data.outLocation,
           modifiedBy: userRole === "admin" ? userName : undefined,
+          isNightDuty: isNightDuty,
         }),
       });
 
       if (response.ok) {
-        // Calculate final earning
-        const { minutes, earning } = calculateEarning(data.inTime, data.outTime, selectedEmployeeData);
+        // Calculate final earning (use fixed 10 hours for night duty)
+        const displayInTime = isNightDuty ? "09:00:00 PM" : data.inTime;
+        const displayOutTime = isNightDuty ? "07:00:00 AM" : data.outTime;
+        const { minutes, earning } = calculateEarning(displayInTime, displayOutTime, selectedEmployeeData);
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
         
-        alert(`✅ Check Out Successful!\n\nCheck In: ${data.inTime}\nCheck Out: ${data.outTime}\nDate: ${data.date}\n\n💰 Final Earning: ₹${earning.toLocaleString('en-IN')}\n⏱️ Total Time: ${hours}h ${mins}m`);
-        setMessage(`✅ Attendance completed! Final Earning: ₹${earning.toLocaleString('en-IN')} (${hours}h ${mins}m)`);
+        const nightDutyNote = isNightDuty ? "\n🌙 Night Duty - Recorded as 9:00 PM - 7:00 AM" : "";
+        alert(`✅ Check Out Successful!\n\nCheck In: ${displayInTime}\nCheck Out: ${displayOutTime}\nDate: ${data.date}${nightDutyNote}\n\n💰 Final Earning: ₹${earning.toLocaleString('en-IN')}\n⏱️ Total Time: ${hours}h ${mins}m`);
+        setMessage(`✅ Attendance completed! Final Earning: ₹${earning.toLocaleString('en-IN')} (${hours}h ${mins}m)${isNightDuty ? " 🌙" : ""}`);
 
         // Save completion status for today
         const today = getISTDate();
