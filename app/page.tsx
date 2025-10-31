@@ -18,6 +18,7 @@ import NotificationManagement from "@/components/NotificationManagement";
 import UserNotifications from "@/components/UserNotifications";
 import AdminNotificationHistory from "@/components/AdminNotificationHistory";
 import BulkImport from "@/components/BulkImport";
+import LocationTracker from "@/components/LocationTracker";
 
 export interface AuthUser {
   id: string;
@@ -264,6 +265,9 @@ export default function Home() {
 
           {activeTab === "attendance" ? (
             <>
+              {/* Location Tracking */}
+              <LocationTracker userId={user.id} userName={user.name} userRole={user.role} />
+
               <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-4">
                 <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 mb-3">
                   {isAdmin ? "Add Attendance" : "Mark Your Attendance"}

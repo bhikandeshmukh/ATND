@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { notificationService } from "@/lib/notifications/client";
+import { pushNotificationService } from "@/lib/notifications/push-service";
+import { notificationListener } from "@/lib/notifications/notification-listener";
 
 interface Notification {
   id: string;
@@ -39,10 +41,20 @@ export default function NotificationBell({ userId, userName }: NotificationBellP
   };
 
   useEffect(() => {
+    // Initialize push notifications
+    pushNotificationService.initialize();
+    
+    // Start notification listener for push notifications
+    notificationListener.startListening(userId);
+    
     fetchNotifications();
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      clearInterval(interval);
+      notificationListener.stopListening();
+    };
   }, [userId]);
 
   const handleMarkAsRead = async (notificationId: string) => {
