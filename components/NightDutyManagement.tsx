@@ -43,7 +43,8 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
   };
 
   const handleStatusUpdate = async (id: string, status: "approved" | "rejected") => {
-    if (processingId) return; // Prevent duplicate clicks
+    // Only prevent duplicate clicks for the SAME request
+    if (processingId === id) return;
 
     setProcessingId(id);
     try {
@@ -63,7 +64,7 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
 
       if (response.ok) {
         alert(`✅ Night duty request ${status} successfully!`);
-        fetchRequests();
+        await fetchRequests();
       } else {
         const errorData = await response.json();
         alert(`❌ Failed to update request status: ${errorData.error || 'Unknown error'}`);
@@ -181,16 +182,16 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
                           <button
                             onClick={() => handleStatusUpdate(request.id, "approved")}
                             disabled={processingId === request.id}
-                            className="text-green-600 hover:text-green-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
-                            {processingId === request.id ? "⏳" : "✓"} Approve
+                            {processingId === request.id ? "⏳ Processing..." : "✓ Approve"}
                           </button>
                           <button
                             onClick={() => handleStatusUpdate(request.id, "rejected")}
                             disabled={processingId === request.id}
-                            className="text-red-600 hover:text-red-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
-                            {processingId === request.id ? "⏳" : "✗"} Reject
+                            {processingId === request.id ? "⏳ Processing..." : "✗ Reject"}
                           </button>
                         </div>
                       )}
