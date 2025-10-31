@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { addLeaveRequest, getAllLeaveRequests } from "@/lib/firebase/leaves";
 import { getAllEmployees } from "@/lib/firebase/employees";
 import { createNotification, NotificationType } from "@/lib/notifications/service";
-import { cache, CacheKeys } from "@/lib/cache/simple-cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,9 +56,6 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if notification fails
     }
 
-    // Clear leaves cache
-    cache.delete(CacheKeys.leaves());
-
     return NextResponse.json({ success: true, id: leaveId });
   } catch (error) {
     console.error("Error adding leave record:", error);
@@ -72,24 +68,15 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check cache
-    const cacheKey = CacheKeys.leaves();
-    const cachedData = cache.get(cacheKey);
-    
-    if (cachedData) {
-      return NextResponse.json(cachedData, {
-        headers: { 'X-Cache': 'HIT' }
-      });
-    }
-
-    // Get leaves from Firebase
+    // Get leaves from Firebase - no cache
     const leaves = await getAllLeaveRequests();
     
-    // Cache for 30 seconds
-    cache.set(cacheKey, leaves, 30000);
-    
     return NextResponse.json(leaves, {
-      headers: { 'X-Cache': 'MISS' }
+      headers: { 
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error("Error fetching leaves:", error);

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addEmployee, getEmployees, deleteEmployee } from "@/lib/employees";
-import { cache, CacheKeys, CacheTags } from "@/lib/cache/advanced-cache";
 
 export async function GET() {
   try {
@@ -12,16 +11,15 @@ export async function GET() {
       );
     }
 
-    // Use getOrSet pattern with tags
-    const cacheKey = CacheKeys.employees();
-    const employees = await cache.getOrSet(
-      cacheKey,
-      () => getEmployees(spreadsheetId),
-      { ttl: 60000, tags: [CacheTags.EMPLOYEES] }
-    );
+    // Get employees directly - no cache
+    const employees = await getEmployees(spreadsheetId);
 
     return NextResponse.json(employees, {
-      headers: { 'X-Cache': 'MISS' }
+      headers: { 
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error("Error fetching employees:", error);
@@ -66,10 +64,6 @@ export async function POST(request: NextRequest) {
       password: password || "",
     });
 
-    // Invalidate all employee-related caches
-    cache.invalidateByTag(CacheTags.EMPLOYEES);
-    cache.invalidateByPattern(/^reports:/);
-
     return NextResponse.json({ success: true, id: employeeId });
   } catch (error) {
     console.error("Error adding employee:", error);
@@ -101,10 +95,6 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deleteEmployee(spreadsheetId, employeeId);
-
-    // Invalidate all employee-related caches
-    cache.invalidateByTag(CacheTags.EMPLOYEES);
-    cache.invalidateByPattern(/^reports:/);
 
     return NextResponse.json({ success: true });
   } catch (error) {
