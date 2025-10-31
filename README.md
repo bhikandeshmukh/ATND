@@ -1,92 +1,202 @@
-# Attendance Tracker
+# 📋 Attendance Tracker
 
-Employee attendance management system with Google Sheets integration.
+Modern employee attendance management system with Firebase & Google Sheets integration.
 
-## Features
+## ✨ Features
 
-### Core Features
-- Role-based access (Admin/User)
-- Geolocation verification (20m radius)
-- Check-in/Check-out tracking
-- Leave management
-- Night duty requests
-- Monthly reports
+### 🎯 Core Features
+- **Role-based Access** - Admin & User roles with different permissions
+- **Geolocation Verification** - 20m radius check for attendance
+- **Check-in/Check-out Tracking** - Real-time attendance monitoring
+- **Leave Management** - Apply, approve/reject leaves with payment status
+- **Night Duty Requests** - Special shift management
+- **Monthly Reports** - Comprehensive attendance reports with export
 
-### Advanced Features (New!)
+### 🚀 Advanced Features
+- **Firebase Integration** - Real-time data sync and offline support
 - **In-App Notifications** - Real-time notifications for leaves, attendance, and system events
+- **Notification History** - Admin can view all notifications sent to employees
 - **Audit Logging** - Complete history tracking for all attendance modifications
-- **Bulk Operations** - Import/export employees, attendance, and leave data (CSV/Excel)
+- **Bulk Import/Export** - CSV import for employees, attendance, leaves, night duty
+- **Email Field** - Employee email management
+- **Google Analytics** - Track app usage and user behavior
+- **PWA Support** - Install as mobile/desktop app
+- **Responsive Sidebar** - Collapsible navigation for better UX
+- **Status Colors** - Green for approved, Red for rejected, Yellow for pending
 
-## Setup
+## 🚀 Quick Setup
 
-1. Install dependencies:
+### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-2. Generate JWT secret:
+### 2. Configure Firebase
+Create a Firebase project and add credentials to `.env.local`:
+```env
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+
+# Google Sheets (Optional - for backup/export)
+GOOGLE_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+GOOGLE_SPREADSHEET_ID=your-spreadsheet-id
+
+# Security
+JWT_SECRET=your-generated-secret
+```
+
+### 3. Generate JWT Secret
 ```bash
 node scripts/generate-jwt-secret.js
 ```
 
-3. Configure `.env.local`:
-```env
-GOOGLE_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
-GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-GOOGLE_SPREADSHEET_ID=your-spreadsheet-id
-JWT_SECRET=your-generated-secret
-```
-
-4. Initialize Google Sheets (creates all required sheets):
+### 4. Initialize Firebase Collections
 ```bash
-npm run init-sheets
+npm run create-firebase-collections
 ```
 
-This will create the following sheets:
-- Employees
-- Audit_Logs (for tracking changes)
-- Notifications (for in-app notifications)
-- Leaves (for leave management)
-- Night_Duty_Requests (for night duty)
-- Monthly attendance sheets (created automatically)
+This creates:
+- `employees` - Employee records
+- `attendance` - Daily attendance with subcollections
+- `leaves` - Leave requests
+- `nightDuty` - Night duty requests
+- `notifications` - User notifications
+- `auditLogs` - Change history
 
-5. Add first admin to Google Sheets "Employees" tab:
-```
-ID: 001
-Name: Admin User
-Position: Administrator
-Role: Admin
-Status: Active
-Total Working Days: 26
-Fixed In Time: 09:00
-Fixed Out Time: 18:00
-Per Minute Rate: 0
-Fixed Salary: 0
-Username: admin
-Password: admin123
-Email: admin@example.com
-Shift ID: (leave empty)
-Notifications Enabled: TRUE
-Notification Types: (leave empty for all)
+### 5. Create First Admin
+```bash
+npm run set-admin-password
 ```
 
-6. Run:
+Or manually add to Firebase `employees` collection:
+```json
+{
+  "id": "001",
+  "name": "Admin User",
+  "position": "Administrator",
+  "role": "admin",
+  "status": "active",
+  "totalWorkingDays": 26,
+  "fixedInTime": "09:00:00 AM",
+  "fixedOutTime": "07:00:00 PM",
+  "perMinuteRate": 0,
+  "fixedSalary": 50000,
+  "username": "admin",
+  "password": "$2a$10$...", // bcrypt hash of "admin123"
+  "email": "admin@company.com"
+}
+```
+
+### 6. Run Development Server
 ```bash
 npm run dev
 ```
 
-7. Login at http://localhost:3000 with `admin` / `admin123`
+### 7. Login
+- URL: http://localhost:3000
+- Username: `admin`
+- Password: `admin123`
+- **⚠️ Change password immediately!**
 
-8. Change password immediately through Employees tab
+## 📱 Build & Deploy
 
-## Tech Stack
+### Production Build
+```bash
+npm run build
+npm start
+```
 
-- Next.js 14
-- TypeScript
-- Tailwind CSS
-- Google Sheets API
-- JWT + bcrypt
+### PWA Icons
+```bash
+node scripts/generate-icons.js
+```
 
-## License
+## 🎨 UI Features
 
-MIT
+### Sidebar Navigation
+- **Desktop**: Permanent sidebar with collapse option
+- **Mobile**: Hamburger menu (closed by default)
+- **Icons**: Emoji icons for better visual recognition
+
+### Status Colors
+- 🟢 **Green**: Approved
+- 🔴 **Red**: Rejected  
+- 🟡 **Yellow**: Pending
+
+### Notifications
+- Real-time notification bell with unread count
+- Mark individual or all as read
+- Admin notification history view
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Next.js 14** - React framework with App Router
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Utility-first styling
+- **PWA** - Progressive Web App support
+
+### Backend
+- **Firebase Firestore** - Real-time NoSQL database
+- **Google Sheets API** - Backup & export (optional)
+- **Next.js API Routes** - Serverless functions
+
+### Security
+- **JWT** - JSON Web Tokens for auth
+- **bcrypt** - Password hashing
+- **Rate Limiting** - Login attempt protection
+
+### Analytics
+- **Google Analytics** - User tracking (G-3FT6WYSXT9)
+
+## 📦 Available Scripts
+
+```bash
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run start            # Start production server
+npm run lint             # Run ESLint
+
+# Utility Scripts
+npm run init-sheets              # Initialize Google Sheets
+npm run init-notifications       # Setup notifications
+npm run create-firebase-collections  # Create Firestore collections
+npm run cleanup-firestore        # Clean old data
+npm run cleanup-sheets          # Clean Google Sheets
+npm run set-admin-password      # Set/reset admin password
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 👨‍💻 Author
+
+**Bhikan Deshmukh**
+- GitHub: [@bhikandeshmukh](https://github.com/bhikandeshmukh)
+- Email: thebhikandeshmukh@gmail.com
+
+## 🙏 Acknowledgments
+
+- Firebase for real-time database
+- Google Sheets API for data export
+- Next.js team for the amazing framework
+- All contributors and users
+
+---
+
+Made with ❤️ by Bhikan Deshmukh

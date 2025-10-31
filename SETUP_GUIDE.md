@@ -1,154 +1,281 @@
-# Advanced Features Setup Guide
+# 🚀 Complete Setup Guide
 
-This guide will help you set up the new advanced features for the Attendance Tracking System.
+This comprehensive guide will help you set up the Attendance Tracking System with Firebase and all advanced features.
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Node.js 18+ installed
-- Google Cloud Project with Sheets API enabled
-- Service account credentials
-- Google Spreadsheet created
+- **Node.js 18+** installed
+- **Firebase Project** created
+- **Google Cloud Project** (optional, for Sheets backup)
+- **Service account credentials** (optional, for Sheets)
+- **Git** for version control
 
-## Step 1: Install Dependencies
+## Step 1: Clone & Install
 
 ```bash
+# Clone repository
+git clone https://github.com/bhikandeshmukh/ATND.git
+cd ATND
+
+# Install dependencies
 npm install
 ```
 
-This will install the new `tsx` dependency needed for running TypeScript scripts.
+This installs all required packages including Firebase, Next.js, and TypeScript tools.
 
-## Step 2: Initialize Google Sheets
+## Step 2: Firebase Setup
 
-Run the initialization script to create all required sheets:
+### Create Firebase Project
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click "Add project"
+3. Enter project name (e.g., "attendance-tracker")
+4. Disable Google Analytics (optional)
+5. Click "Create project"
+
+### Enable Firestore Database
+
+1. In Firebase Console, go to "Firestore Database"
+2. Click "Create database"
+3. Select "Start in production mode"
+4. Choose location (closest to your users)
+5. Click "Enable"
+
+### Get Firebase Configuration
+
+1. Go to Project Settings (gear icon)
+2. Scroll to "Your apps"
+3. Click web icon (</>) to add web app
+4. Register app with nickname
+5. Copy the configuration values
+
+### Configure Environment Variables
+
+Create `.env.local` file in project root:
+
+```env
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSy...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
+NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abc123
+
+# Google Sheets (Optional - for backup/export)
+GOOGLE_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+GOOGLE_SPREADSHEET_ID=your-spreadsheet-id
+
+# Security
+JWT_SECRET=your-generated-secret-here
+```
+
+### Generate JWT Secret
+
+```bash
+node scripts/generate-jwt-secret.js
+```
+
+Copy the generated secret to `.env.local`
+
+## Step 3: Initialize Firebase Collections
+
+Run the initialization script:
+
+```bash
+npm run create-firebase-collections
+```
+
+This creates the following Firestore collections:
+
+### Collections Created:
+
+1. **employees** - Employee records
+   - Fields: id, name, position, role, status, email, etc.
+   - Indexes: role, status, username
+
+2. **attendance** - Daily attendance (with subcollections)
+   - Structure: `attendance/{employeeName}/records/{date}`
+   - Fields: date, inTime, outTime, totalMinutes, etc.
+
+3. **leaves** - Leave requests
+   - Fields: employeeName, leaveType, startDate, endDate, status
+   - Indexes: status, employeeName
+
+4. **nightDuty** - Night duty requests
+   - Fields: employeeName, date, status, approvedBy
+   - Indexes: status, date
+
+5. **notifications** - User notifications (with subcollections)
+   - Structure: `notifications/{userId}/items/{notificationId}`
+   - Fields: title, message, type, isRead, createdAt
+
+6. **auditLogs** - Change history
+   - Fields: action, entityType, performedBy, timestamp
+   - Indexes: entityType, timestamp
+
+## Step 4: Create First Admin User
+
+### Option 1: Using Script (Recommended)
+
+```bash
+npm run set-admin-password
+```
+
+Follow the prompts to create admin user.
+
+### Option 2: Manual Firebase Entry
+
+Add document to `employees` collection:
+
+```json
+{
+  "id": "001",
+  "name": "Admin User",
+  "position": "Administrator",
+  "role": "admin",
+  "status": "active",
+  "totalWorkingDays": 26,
+  "fixedInTime": "09:00:00 AM",
+  "fixedOutTime": "07:00:00 PM",
+  "perMinuteRate": 0,
+  "fixedSalary": 50000,
+  "username": "admin",
+  "password": "$2a$10$YourBcryptHashHere",
+  "email": "admin@company.com",
+  "createdAt": "2025-01-31T00:00:00.000Z"
+}
+```
+
+**Note:** Use bcrypt to hash password before adding.
+
+## Step 5: Google Sheets Setup (Optional)
+
+For backup and CSV export functionality:
+
+### Create Service Account
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create new project or select existing
+3. Enable Google Sheets API
+4. Create Service Account
+5. Download JSON key file
+
+### Create Google Spreadsheet
+
+1. Create new Google Spreadsheet
+2. Share with service account email (Editor access)
+3. Copy spreadsheet ID from URL
+4. Add to `.env.local`
+
+### Initialize Sheets
 
 ```bash
 npm run init-sheets
 ```
 
-This script will create the following sheets in your Google Spreadsheet:
+This creates backup sheets for:
+- Employees
+- Attendance (monthly)
+- Leaves
+- Night Duty
+- Notifications
+- Audit Logs
 
-### New Sheets Created:
+## Step 6: Run Application
 
-1. **Reset_Tokens** - Stores password reset tokens
-   - Columns: ID, User ID, Token, Expires At, Used, Created At, IP Address
+### Development Mode
 
-2. **Audit_Logs** - Tracks all system modifications
-   - Columns: ID, Timestamp, Action, Entity Type, Entity ID, Employee ID, Performed By, Performed By ID, Field Changed, Old Value, New Value, Reason, IP Address, User Agent
-
-3. **Shifts** - Defines work shifts
-   - Columns: ID, Name, Start Time, End Time, Break Duration, Working Days, Grace Time, Is Active, Created At, Updated At
-
-4. **Overtime** - Records overtime work
-   - Columns: ID, Employee ID, Employee Name, Date, Regular Minutes, Overtime Minutes, Overtime Type, Overtime Rate, Overtime Pay, Status, Approved By, Approved At, Reason, Created At
-
-5. **Overtime_Rules** - Configures overtime calculation
-   - Columns: ID, Name, Daily Threshold, Weekly Threshold, Regular Rate, Holiday Rate, Requires Approval, Auto Approve Under, Is Active
-   - **Note**: A default rule is automatically created
-
-6. **Holidays** - Company holiday calendar
-   - Columns: ID, Date, Name, Type, Description, Is Recurring, Recurrence Rule, Locations, Is Active, Created At, Updated At
-
-### Updated Sheets:
-
-1. **Employees** - New columns added:
-   - Email (for notifications and password reset)
-   - Shift ID (for shift assignment)
-   - Notifications Enabled (boolean)
-   - Notification Types (comma-separated list)
-
-2. **Monthly Attendance Sheets** (e.g., 2025-01) - New columns added:
-   - Overtime Minutes
-   - Overtime Pay
-   - Is Holiday (boolean)
-
-## Step 3: Update Employee Records
-
-After initialization, update your existing employee records to include email addresses:
-
-1. Open your Google Spreadsheet
-2. Go to the "Employees" sheet
-3. Add email addresses for all employees in the "Email" column
-4. Set "Notifications Enabled" to TRUE for employees who want notifications
-5. Leave "Notification Types" empty to receive all notifications
-
-Example employee row:
-```
-001 | John Doe | Manager | Admin | Active | 26 | 09:00 | 18:00 | 0 | 50000 | john.doe | [hashed] | john@example.com | | TRUE | 
-```
-
-## Step 4: Configure Email Service (Optional)
-
-To enable email notifications, add these environment variables to your `.env.local`:
-
-```env
-# Email Configuration (for notifications)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-FROM_EMAIL=noreply@yourcompany.com
-FROM_NAME=Attendance System
-```
-
-### Gmail Setup:
-1. Enable 2-factor authentication on your Google account
-2. Generate an App Password: https://myaccount.google.com/apppasswords
-3. Use the app password as `SMTP_PASS`
-
-### Other Email Providers:
-- **SendGrid**: Use API key authentication
-- **AWS SES**: Configure AWS credentials
-- **Mailgun**: Use SMTP credentials
-
-## Step 5: Verify Installation
-
-1. Start the development server:
 ```bash
 npm run dev
 ```
 
-2. Check the API endpoint to verify sheets exist:
+Open http://localhost:3000
+
+### Production Build
+
 ```bash
-curl http://localhost:3000/api/admin/init-sheets
+npm run build
+npm start
 ```
 
-Expected response:
-```json
-{
-  "spreadsheetId": "your-spreadsheet-id",
-  "allExist": true,
-  "missing": []
-}
-```
+### Login
 
-## Step 6: Test Features
+- **Username:** `admin`
+- **Password:** `admin123` (or what you set)
+- **⚠️ Change password immediately after first login!**
 
-### Test Password Reset:
-1. Go to login page
-2. Click "Forgot Password?"
-3. Enter username
-4. Check email for reset link (if email configured)
+## Step 7: Test Features
 
-### Test Shift Management:
-1. Login as admin
-2. Go to Shifts tab (to be implemented)
-3. Create a new shift
-4. Assign employees to shift
+### ✅ Test Basic Features
 
-### Test Overtime Calculation:
-1. Check in and out with overtime hours
-2. View overtime records in admin panel
-3. Approve/reject overtime
+1. **Login**
+   - Use admin credentials
+   - Verify role-based access
 
-### Test Holiday Management:
-1. Go to Holidays tab (to be implemented)
-2. Add company holidays
-3. Check attendance on holiday dates
+2. **Attendance**
+   - Mark check-in
+   - Mark check-out
+   - View attendance records
 
-### Test Audit Logging:
-1. Modify any attendance record as admin
-2. View audit log to see the change history
-3. Export audit logs
+3. **Leave Management**
+   - Apply for leave
+   - Admin: Approve/reject leaves
+   - Check status colors (Green/Red/Yellow)
+
+4. **Night Duty**
+   - Request night duty
+   - Admin: Approve/reject requests
+   - View history
+
+### 🔔 Test Notifications
+
+1. **User Notifications**
+   - Click notification bell
+   - View unread count
+   - Mark individual as read
+   - Mark all as read
+
+2. **Admin Notification History**
+   - Go to Notifications tab
+   - Filter by employee
+   - View all sent notifications
+
+### 📊 Test Reports
+
+1. **Monthly Reports**
+   - Select month/year
+   - View attendance summary
+   - Export to CSV
+
+2. **Employee Reports**
+   - View individual employee data
+   - Check overtime calculations
+   - Export reports
+
+### 📥 Test Bulk Import
+
+1. **Download Templates**
+   - Go to Import Data tab
+   - Download CSV templates
+
+2. **Import Data**
+   - Fill template with data
+   - Upload CSV file
+   - Verify import results
+
+### 🎨 Test UI Features
+
+1. **Sidebar Navigation**
+   - Desktop: Collapse/expand sidebar
+   - Mobile: Hamburger menu
+   - Verify default closed state
+
+2. **Status Colors**
+   - Approved: Green
+   - Rejected: Red
+   - Pending: Yellow
 
 ## Troubleshooting
 
