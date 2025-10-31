@@ -38,8 +38,8 @@ export default function LocationTracker({ userId, userName, userRole }: Location
   const handleStartTracking = async () => {
     // Office location (update with your actual coordinates)
     const officeConfig = {
-      latitude: 21.1702,  // Replace with your office latitude
-      longitude: 72.8311, // Replace with your office longitude
+      latitude: 21.169733,  // Replace with your office latitude
+      longitude: 72.850070, // Replace with your office longitude
       radius: 50,         // 50 meters
       officeId: 'main-office',
       officeName: 'Main Office',
