@@ -8,7 +8,7 @@ interface NightDutyRequest {
   date: string;
   reason: string;
   requestedBy?: string;
-  status: "pending" | "approved" | "rejected";
+  status: "Pending" | "Approved" | "Rejected" | "pending" | "approved" | "rejected";
   requestedDate: string;
   approvedBy?: string;
   approvedDate?: string;
@@ -47,13 +47,17 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
     
     setProcessingId(id);
     try {
+      // Capitalize first letter for API
+      const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+      
       const response = await fetch("/api/night-duty/status", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           id, 
-          status,
-          approvedBy: `Admin: ${adminName}`
+          status: capitalizedStatus,
+          approvedBy: adminName,
+          approvedById: "ADMIN"
         }),
       });
 
@@ -61,9 +65,11 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
         alert(`✅ Night duty request ${status} successfully!`);
         fetchRequests();
       } else {
-        alert("❌ Failed to update request status");
+        const errorData = await response.json();
+        alert(`❌ Failed to update request status: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error("Error updating request status:", error);
       alert("❌ Error updating request status");
     } finally {
       setProcessingId(null);
@@ -169,7 +175,7 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
                       {request.approvedTime || "-"}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-xs sm:text-sm">
-                      {request.status === "pending" && (
+                      {(request.status === "pending" || request.status === "Pending") && (
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleStatusUpdate(request.id, "approved")}
