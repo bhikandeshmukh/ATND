@@ -245,6 +245,58 @@ export class PushNotificationService {
   }
 
   /**
+   * Send notification for late arrival
+   */
+  async notifyLateArrival(data: {
+    lateMinutes: number;
+    expectedTime: string;
+    actualTime: string;
+    isAdmin?: boolean;
+    employeeName?: string;
+  }): Promise<void> {
+    if (data.isAdmin) {
+      await this.showNotification('⏰ Employee Late Arrival', {
+        body: `${data.employeeName} arrived ${data.lateMinutes} minutes late. Expected: ${data.expectedTime}`,
+        tag: 'late-arrival-admin',
+        requireInteraction: true,
+        data: { type: 'late_arrival', ...data },
+      });
+    } else {
+      await this.showNotification('⏰ Late Arrival Alert', {
+        body: `You arrived ${data.lateMinutes} minutes late. Expected: ${data.expectedTime}, Actual: ${data.actualTime}`,
+        tag: 'late-arrival',
+        data: { type: 'late_arrival', ...data },
+      });
+    }
+  }
+
+  /**
+   * Send notification for early leave
+   */
+  async notifyEarlyLeave(data: {
+    earlyMinutes: number;
+    expectedTime: string;
+    actualTime: string;
+    isAdmin?: boolean;
+    employeeName?: string;
+  }): Promise<void> {
+    if (data.isAdmin) {
+      await this.showNotification('🚪 Employee Early Leave', {
+        body: `${data.employeeName} left ${data.earlyMinutes} minutes early. Expected: ${data.expectedTime}`,
+        tag: 'early-leave-admin',
+        requireInteraction: true,
+        data: { type: 'early_leave', ...data },
+      });
+    } else {
+      await this.showNotification('🚪 Early Leave Alert', {
+        body: `You left ${data.earlyMinutes} minutes early. Expected: ${data.expectedTime}, Actual: ${data.actualTime}`,
+        tag: 'early-leave',
+        data: { type: 'early_leave', ...data },
+      });
+    }
+  }
+
+  /**
    * Send system alert
    */
   async notifySystemAlert(data: {

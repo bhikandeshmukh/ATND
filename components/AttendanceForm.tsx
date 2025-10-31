@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { getCurrentLocation, isWithinOfficeRadius, getOfficeLocation } from "@/lib/geofence";
+import { backgroundTracker } from "@/lib/geofencing/background-tracker";
+import { pushNotificationService } from "@/lib/notifications/push-service";
 
 interface AttendanceFormProps {
   onRecordAdded: () => void;
@@ -293,6 +295,43 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
     }
   }, [formData.inTime, formData.outTime, selectedEmployeeData]);
 
+  // Auto-start location tracking
+  const startLocationTracking = async () => {
+    try {
+      // Initialize push notifications
+      await pushNotificationService.initialize();
+
+      // Office location configuration
+      const officeConfig = {
+        latitude: 21.1702,  // Update with your office coordinates
+        longitude: 72.8311,
+        radius: 50,
+        officeId: 'main-office',
+        officeName: 'Main Office',
+      };
+
+      const initialized = await backgroundTracker.initialize(officeConfig);
+      if (initialized) {
+        // Get user ID from localStorage or use employee name
+        const userId = formData.employeeName || userName || 'user';
+        backgroundTracker.startTracking(userId, formData.employeeName || userName || 'User');
+        console.log('✅ Location tracking started automatically');
+      }
+    } catch (error) {
+      console.error('Failed to start location tracking:', error);
+    }
+  };
+
+  // Auto-stop location tracking
+  const stopLocationTracking = () => {
+    try {
+      backgroundTracker.stopTracking();
+      console.log('⏹️ Location tracking stopped automatically');
+    } catch (error) {
+      console.error('Failed to stop location tracking:', error);
+    }
+  };
+
   const handleInTimeDone = async () => {
     // Check if attendance is already completed for today
     const today = getISTDate();
@@ -364,6 +403,10 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
         setInTimeDone(true);
         alert(`✅ Check In Successful!\n\nTime: ${currentTime}\nDate: ${currentDate}`);
         setMessage(`✅ Check In recorded at ${currentTime}`);
+        
+        // Auto-enable location tracking on check-in
+        await startLocationTracking();
+        
         onRecordAdded();
       } else {
         const errorData = await response.json();
@@ -467,6 +510,9 @@ export default function AttendanceForm({ onRecordAdded, userRole, userName }: At
         const today = getISTDate();
         localStorage.setItem("lastAttendanceDate", today);
         localStorage.setItem(`attendance_${today}_${data.employeeName}`, "completed");
+
+        // Auto-disable location tracking on check-out
+        stopLocationTracking();
 
         onRecordAdded();
 

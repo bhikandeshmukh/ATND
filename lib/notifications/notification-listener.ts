@@ -130,6 +130,16 @@ export class NotificationListener {
         });
         break;
 
+      case 'late_arrival':
+        await pushNotificationService.notifyLateArrival({
+          lateMinutes: notification.data?.lateMinutes || 0,
+          expectedTime: notification.data?.expectedTime || '',
+          actualTime: notification.data?.actualTime || '',
+          isAdmin: notification.data?.employeeName ? true : false,
+          employeeName: notification.data?.employeeName,
+        });
+        break;
+
       case 'system_alert':
         await pushNotificationService.notifySystemAlert({
           title: notification.title,
