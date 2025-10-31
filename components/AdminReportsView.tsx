@@ -136,7 +136,7 @@ export default function AdminReportsView() {
                 </div>
               ))}
             </div>
-            
+
             {/* Table Skeleton */}
             <div className="animate-pulse mt-6">
               <div className="h-6 bg-gray-300 rounded w-1/4 mb-3"></div>
