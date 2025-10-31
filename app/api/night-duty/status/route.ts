@@ -3,6 +3,7 @@ import { updateNightDutyStatus, getAllNightDutyRequests } from "@/lib/firebase/n
 import { getAllEmployees } from "@/lib/firebase/employees";
 import { createNotification, NotificationType } from "@/lib/notifications/service";
 import { logNightDutyAction } from "@/lib/audit/service";
+import { invalidateRelated } from "@/lib/cache/advanced-cache";
 
 export async function PUT(req: NextRequest) {
   try {
@@ -90,6 +91,9 @@ export async function PUT(req: NextRequest) {
       console.error("Error sending notification:", notifError);
       // Don't fail the request if notification fails
     }
+
+    // Invalidate night duty cache after status update
+    invalidateRelated.nightDuty();
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

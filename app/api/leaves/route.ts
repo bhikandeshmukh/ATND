@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { addLeaveRequest, getAllLeaveRequests } from "@/lib/firebase/leaves";
 import { getAllEmployees } from "@/lib/firebase/employees";
 import { createNotification, NotificationType } from "@/lib/notifications/service";
+import { cache, CacheKeys, CacheTags, invalidateRelated } from "@/lib/cache/advanced-cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,6 +57,9 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if notification fails
     }
 
+    // Invalidate leaves cache
+    invalidateRelated.leave();
+
     return NextResponse.json({ success: true, id: leaveId });
   } catch (error) {
     console.error("Error adding leave record:", error);
@@ -68,16 +72,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get leaves from Firebase - no cache
-    const leaves = await getAllLeaveRequests();
+    // Use cache with 30 second TTL
+    const leaves = await cache.getOrSet(
+      CacheKeys.leaves(),
+      () => getAllLeaveRequests(),
+      { ttl: 30000, tags: [CacheTags.LEAVES] }
+    );
     
-    return NextResponse.json(leaves, {
-      headers: { 
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
+    return NextResponse.json(leaves);
   } catch (error) {
     console.error("Error fetching leaves:", error);
     return NextResponse.json(

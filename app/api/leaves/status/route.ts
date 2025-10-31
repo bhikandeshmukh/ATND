@@ -3,6 +3,7 @@ import { updateLeaveStatus as updateFirebaseLeaveStatus, getAllLeaveRequests } f
 import { getAllEmployees } from "@/lib/firebase/employees";
 import { createNotification, NotificationType } from "@/lib/notifications/service";
 import { logLeaveAction } from "@/lib/audit/service";
+import { invalidateRelated } from "@/lib/cache/advanced-cache";
 
 export async function PUT(request: NextRequest) {
   try {
@@ -85,6 +86,9 @@ export async function PUT(request: NextRequest) {
       console.error("Error sending notification:", notifError);
       // Don't fail the request if notification fails
     }
+
+    // Invalidate leaves cache after status update
+    invalidateRelated.leave();
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

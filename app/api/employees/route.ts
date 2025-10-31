@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addEmployee, getEmployees, deleteEmployee } from "@/lib/employees";
+import { cache, CacheKeys, CacheTags, invalidateRelated } from "@/lib/cache/advanced-cache";
 
 export async function GET() {
   try {
@@ -11,16 +12,14 @@ export async function GET() {
       );
     }
 
-    // Get employees directly - no cache
-    const employees = await getEmployees(spreadsheetId);
+    // Use cache with 60 second TTL
+    const employees = await cache.getOrSet(
+      CacheKeys.employees(),
+      () => getEmployees(spreadsheetId),
+      { ttl: 60000, tags: [CacheTags.EMPLOYEES] }
+    );
 
-    return NextResponse.json(employees, {
-      headers: { 
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
+    return NextResponse.json(employees);
   } catch (error) {
     console.error("Error fetching employees:", error);
     return NextResponse.json(
@@ -64,6 +63,9 @@ export async function POST(request: NextRequest) {
       password: password || "",
     });
 
+    // Invalidate employee cache
+    invalidateRelated.employee();
+
     return NextResponse.json({ success: true, id: employeeId });
   } catch (error) {
     console.error("Error adding employee:", error);
@@ -95,6 +97,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deleteEmployee(spreadsheetId, employeeId);
+
+    // Invalidate employee cache
+    invalidateRelated.employee();
 
     return NextResponse.json({ success: true });
   } catch (error) {

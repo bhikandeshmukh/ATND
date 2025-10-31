@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { addNightDutyRequest, getAllNightDutyRequests } from "@/lib/firebase/nightDuty";
 import { getAllEmployees } from "@/lib/firebase/employees";
 import { createNotification, NotificationType } from "@/lib/notifications/service";
+import { cache, CacheKeys, CacheTags, invalidateRelated } from "@/lib/cache/advanced-cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,6 +53,9 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if notification fails
     }
 
+    // Invalidate night duty cache
+    invalidateRelated.nightDuty();
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Error adding night duty request:", error);
@@ -73,18 +77,16 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Always fetch fresh data - no caching for admin actions
-    console.log('Fetching fresh night duty requests from Firebase');
-    const requests = await getAllNightDutyRequests();
-    console.log(`Found ${requests.length} night duty requests`);
+    // Use cache with 30 second TTL
+    const requests = await cache.getOrSet(
+      CacheKeys.nightDuty(),
+      () => getAllNightDutyRequests(),
+      { ttl: 30000, tags: [CacheTags.NIGHT_DUTY] }
+    );
     
-    return NextResponse.json(requests, {
-      headers: { 
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
+    console.log(`Fetched ${requests.length} night duty requests (cached)`);
+    
+    return NextResponse.json(requests);
   } catch (error) {
     console.error("Error fetching night duty requests:", error);
     return NextResponse.json(
