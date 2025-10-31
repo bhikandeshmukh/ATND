@@ -9,14 +9,19 @@
     "lint": "next lint",
     "init-sheets": "tsx scripts/init-sheets.ts",
     "init-notifications": "tsx scripts/init-notifications.ts",
-    "cleanup-sheets": "tsx scripts/cleanup-sheets.ts"
+    "cleanup-sheets": "tsx scripts/cleanup-sheets.ts",
+    "create-firebase-collections": "tsx scripts/create-firestore-collections.ts",
+    "cleanup-firestore": "tsx scripts/cleanup-firestore.ts",
+    "set-admin-password": "tsx scripts/set-admin-password.ts"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.4",
     "@capacitor/cli": "^7.4.4",
     "@capacitor/core": "^7.4.4",
+    "@react-oauth/google": "^0.12.2",
     "bcryptjs": "^3.0.2",
     "date-fns": "^3.0.0",
+    "firebase": "^12.4.0",
     "googleapis": "^128.0.0",
     "jsonwebtoken": "^9.0.2",
     "next": "^14.2.0",

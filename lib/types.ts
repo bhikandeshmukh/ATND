@@ -12,14 +12,15 @@ export interface AttendanceRecord {
 export interface Employee {
   id: string;
   name: string;
-  position: string;
+  position?: string;
   role: "admin" | "user";
-  status: "active" | "inactive";
-  totalWorkingDays: number;
-  fixedInTime: string;
-  fixedOutTime: string;
-  perMinuteRate: number;
-  fixedSalary: number;
+  status?: "active" | "inactive";
+  totalWorkingDays?: number;
+  fixedInTime?: string;
+  fixedOutTime?: string;
+  perMinuteRate?: number;
+  fixedSalary?: number;
   username?: string;
   password?: string;
+  email?: string;
 }

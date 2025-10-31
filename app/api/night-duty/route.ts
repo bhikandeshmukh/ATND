@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addNightDutyRequest, getAllNightDutyRequests } from "@/lib/googleSheets";
-import { getEmployees } from "@/lib/employees";
+import { addNightDutyRequest, getAllNightDutyRequests } from "@/lib/firebase/nightDuty";
+import { getAllEmployees } from "@/lib/firebase/employees";
 import { createNotification, NotificationType } from "@/lib/notifications/service";
 import { cache, CacheKeys } from "@/lib/cache/simple-cache";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { employeeName, date, reason } = body;
+    const { employeeName, date, reason, requestedBy } = body;
 
     if (!employeeName || !date) {
       return NextResponse.json(
@@ -16,39 +16,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
-    await addNightDutyRequest(spreadsheetId, {
+    await addNightDutyRequest({
       employeeName,
       date,
-      reason: reason || "Night duty request",
-      status: "pending",
-      requestedDate: new Date().toISOString().split("T")[0],
+      startTime: "09:00:00 PM",
+      endTime: "07:00:00 AM",
+      reason: reason || '',
+      status: "Pending",
+      appliedDate: new Date().toISOString().split("T")[0],
+      requestedBy: requestedBy || employeeName,
     });
 
     // Send notifications to all admins
     try {
-      const employees = await getEmployees(spreadsheetId);
+      const employees = await getAllEmployees();
       const admins = employees.filter((emp) => emp.role === "admin");
 
-      for (const admin of admins) {
-        await createNotification(spreadsheetId, {
-          userId: admin.id,
-          type: NotificationType.NIGHT_DUTY_REQUEST,
-          title: "New Night Duty Request",
-          message: `${employeeName} has requested night duty for ${date}`,
-          data: {
-            employeeName,
-            date,
-            reason,
-          },
-        });
+      const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
+      if (spreadsheetId) {
+        for (const admin of admins) {
+          await createNotification(spreadsheetId, {
+            userId: admin.id || '',
+            type: NotificationType.NIGHT_DUTY_REQUEST,
+            title: "New Night Duty Request",
+            message: `${employeeName} has requested night duty for ${date}`,
+            data: {
+              employeeName,
+              date,
+              reason,
+            },
+          });
+        }
       }
     } catch (notifError) {
       console.error("Error sending notifications:", notifError);
@@ -79,14 +77,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
     // Check cache
     const cacheKey = CacheKeys.nightDuty();
     const cachedData = cache.get(cacheKey);
@@ -97,7 +87,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const requests = await getAllNightDutyRequests(spreadsheetId);
+    const requests = await getAllNightDutyRequests();
     
     // Cache for 30 seconds
     cache.set(cacheKey, requests, 30000);

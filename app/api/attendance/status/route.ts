@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkTodayAttendanceStatus } from "@/lib/googleSheets";
+import { getAttendanceStatus } from "@/lib/firebase/attendance";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,15 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
-    const status = await checkTodayAttendanceStatus(spreadsheetId, employeeName, date);
+    const status = await getAttendanceStatus(employeeName, date);
 
     return NextResponse.json(status);
   } catch (error) {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AuthUser } from "@/app/page";
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
 interface LoginFormProps {
     onLogin: (user: AuthUser) => void;
@@ -45,17 +46,52 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
         }
     };
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-4">
-            <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                        Attendance Tracker
-                    </h1>
-                    <p className="text-gray-600">Sign in to continue</p>
-                </div>
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        setError("");
+        setLoading(true);
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+        try {
+            const response = await fetch("/api/auth/google", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ credential: credentialResponse.credential }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                if (data.token) {
+                    localStorage.setItem("token", data.token);
+                }
+                onLogin(data.user);
+            } else {
+                setError(data.error || "Google login failed");
+            }
+        } catch (error) {
+            setError("Network error. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleError = () => {
+        setError("Google login failed. Please try again.");
+    };
+
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
+    return (
+        <GoogleOAuthProvider clientId={clientId}>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-4">
+                <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            Attendance Tracker
+                        </h1>
+                        <p className="text-gray-600">Sign in to continue</p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Username
@@ -102,7 +138,32 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
                         {loading ? "Signing in..." : "Sign In"}
                     </button>
                 </form>
+
+                {/* Divider */}
+                <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                    </div>
+                </div>
+
+                {/* Google Sign In */}
+                <div className="flex justify-center">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        useOneTap
+                        theme="outline"
+                        size="large"
+                        text="signin_with"
+                        shape="rectangular"
+                        width="100%"
+                    />
+                </div>
             </div>
         </div>
+        </GoogleOAuthProvider>
     );
 }

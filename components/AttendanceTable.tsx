@@ -15,13 +15,30 @@ export default function AttendanceTable({ records, employees = [] }: AttendanceT
   // Calculate daily earning for each record
   const calculateDailyEarning = (record: AttendanceRecord) => {
     const employee = employees.find(emp => emp.name === record.employeeName);
-    if (!employee || !record.totalMinutes) return 0;
+    
+    if (!employee) {
+      console.log(`Employee not found for: ${record.employeeName}`);
+      return 0;
+    }
+    
+    if (!record.totalMinutes) {
+      console.log(`No totalMinutes for: ${record.employeeName}`);
+      return 0;
+    }
+
+    console.log(`Employee ${employee.name}: perMinuteRate=${employee.perMinuteRate}, fixedSalary=${employee.fixedSalary}, totalWorkingDays=${employee.totalWorkingDays}`);
 
     if (employee.perMinuteRate && employee.perMinuteRate > 0) {
-      return Math.round(record.totalMinutes * employee.perMinuteRate);
+      const earning = Math.round(record.totalMinutes * employee.perMinuteRate);
+      console.log(`Calculated earning (per minute): ₹${earning}`);
+      return earning;
     } else if (employee.fixedSalary && employee.fixedSalary > 0 && employee.totalWorkingDays) {
-      return Math.round(employee.fixedSalary / employee.totalWorkingDays);
+      const earning = Math.round(employee.fixedSalary / employee.totalWorkingDays);
+      console.log(`Calculated earning (fixed salary): ₹${earning}`);
+      return earning;
     }
+    
+    console.log(`No earning calculation possible for: ${employee.name}`);
     return 0;
   };
 

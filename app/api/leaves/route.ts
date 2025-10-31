@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addLeaveRecord, getAllLeaves } from "@/lib/googleSheets";
-import { getEmployees } from "@/lib/employees";
+import { addLeaveRequest, getAllLeaveRequests } from "@/lib/firebase/leaves";
+import { getAllEmployees } from "@/lib/firebase/employees";
 import { createNotification, NotificationType } from "@/lib/notifications/service";
 import { cache, CacheKeys } from "@/lib/cache/simple-cache";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { employeeName, leaveType, startDate, endDate, reason, employeeId } = body;
+    const { employeeName, leaveType, startDate, endDate, reason } = body;
 
     if (!employeeName || !leaveType || !startDate || !endDate || !reason) {
       return NextResponse.json(
@@ -16,15 +16,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
-    await addLeaveRecord(spreadsheetId, {
+    // Add leave request to Firebase
+    const leaveId = await addLeaveRequest({
       employeeName,
       leaveType,
       startDate,
@@ -36,23 +29,28 @@ export async function POST(request: NextRequest) {
 
     // Send notifications to all admins
     try {
-      const employees = await getEmployees(spreadsheetId);
+      const employees = await getAllEmployees();
       const admins = employees.filter((emp) => emp.role === "admin");
 
-      for (const admin of admins) {
-        await createNotification(spreadsheetId, {
-          userId: admin.id,
-          type: NotificationType.LEAVE_REQUEST,
-          title: "New Leave Request",
-          message: `${employeeName} has requested ${leaveType} leave from ${startDate} to ${endDate}`,
-          data: {
-            employeeName,
-            leaveType,
-            startDate,
-            endDate,
-            reason,
-          },
-        });
+      const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
+      if (spreadsheetId) {
+        for (const admin of admins) {
+          if (admin.id) {
+            await createNotification(spreadsheetId, {
+              userId: admin.id,
+              type: NotificationType.LEAVE_REQUEST,
+              title: "New Leave Request",
+              message: `${employeeName} has requested ${leaveType} leave from ${startDate} to ${endDate}`,
+              data: {
+                employeeName,
+                leaveType,
+                startDate,
+                endDate,
+                reason,
+              },
+            });
+          }
+        }
       }
     } catch (notifError) {
       console.error("Error sending notifications:", notifError);
@@ -62,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Clear leaves cache
     cache.delete(CacheKeys.leaves());
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, id: leaveId });
   } catch (error) {
     console.error("Error adding leave record:", error);
     return NextResponse.json(
@@ -74,14 +72,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
     // Check cache
     const cacheKey = CacheKeys.leaves();
     const cachedData = cache.get(cacheKey);
@@ -92,7 +82,8 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const leaves = await getAllLeaves(spreadsheetId);
+    // Get leaves from Firebase
+    const leaves = await getAllLeaveRequests();
     
     // Cache for 30 seconds
     cache.set(cacheKey, leaves, 30000);

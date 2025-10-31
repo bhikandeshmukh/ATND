@@ -37,6 +37,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Google Analytics */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-3FT6WYSXT9"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-3FT6WYSXT9');
+            `,
+          }}
+        />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <meta name="mobile-web-app-capable" content="yes" />

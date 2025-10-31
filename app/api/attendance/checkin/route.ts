@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addCheckInRecord, checkTodayAttendanceStatus } from "@/lib/googleSheets";
+import { addCheckIn, getAttendanceStatus } from "@/lib/firebase/attendance";
 import { logAttendanceChange } from "@/lib/audit/service";
 
 export async function POST(request: NextRequest) {
@@ -14,19 +14,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
     // Check if this is an update (for audit logging)
-    const existingStatus = await checkTodayAttendanceStatus(spreadsheetId, employeeName, date);
+    const existingStatus = await getAttendanceStatus(employeeName, date);
     const isUpdate = existingStatus.hasCheckedIn;
 
-    await addCheckInRecord(spreadsheetId, {
+    await addCheckIn({
       date,
       employeeName,
       inTime,
@@ -36,17 +28,20 @@ export async function POST(request: NextRequest) {
 
     // Create audit log if modified by admin
     if (modifiedBy && employeeId) {
-      await logAttendanceChange(spreadsheetId, {
-        employeeId: employeeId,
-        employeeName: employeeName,
-        date: date,
-        fieldChanged: "Check In",
-        oldValue: isUpdate ? existingStatus.inTime : "Not checked in",
-        newValue: `${inTime} at ${inLocation}`,
-        performedBy: modifiedBy,
-        performedById: modifiedBy.includes("Admin") ? "ADMIN" : employeeId,
-        reason: "Admin modification",
-      });
+      const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
+      if (spreadsheetId) {
+        await logAttendanceChange(spreadsheetId, {
+          employeeId: employeeId,
+          employeeName: employeeName,
+          date: date,
+          fieldChanged: "Check In",
+          oldValue: isUpdate ? existingStatus.inTime : "Not checked in",
+          newValue: `${inTime} at ${inLocation}`,
+          performedBy: modifiedBy,
+          performedById: modifiedBy.includes("Admin") ? "ADMIN" : employeeId,
+          reason: "Admin modification",
+        });
+      }
     }
 
     return NextResponse.json({ success: true });

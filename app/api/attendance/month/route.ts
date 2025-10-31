@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSpecificMonthAttendance } from "@/lib/googleSheets";
+import { getMonthlyAttendance } from "@/lib/firebase/attendance";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,15 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
-    const records = await getSpecificMonthAttendance(spreadsheetId, year, month);
+    const records = await getMonthlyAttendance(year, month);
     return NextResponse.json(records);
   } catch (error) {
     console.error("Error fetching monthly attendance:", error);

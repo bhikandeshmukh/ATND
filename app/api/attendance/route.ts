@@ -1,27 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addAttendanceRecord, getMonthlyAttendance } from "@/lib/googleSheets";
+import { addCheckIn } from "@/lib/firebase/attendance";
+import { getMonthlyAttendance } from "@/lib/firebase/attendance";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { employeeName, date, inTime, outTime, inLocation, outLocation } = body;
 
-    if (!employeeName || !date || !inTime || !outTime) {
+    if (!employeeName || !date || !inTime) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
-    await addAttendanceRecord(spreadsheetId, {
+    await addCheckIn({
       date,
       employeeName,
       inTime,
@@ -42,26 +35,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
-    const rows = await getMonthlyAttendance(spreadsheetId);
+    const now = new Date();
+    const year = now.getFullYear().toString();
+    const month = (now.getMonth() + 1).toString();
     
-    const records = rows.map((row: any[]) => ({
-      date: row[0] || "",
-      employeeName: row[1] || "",
-      inTime: row[2] || "",
-      outTime: row[3] || "",
-      inLocation: row[4] || "",
-      outLocation: row[5] || "",
-      totalMinutes: parseInt(row[6]) || 0,
-      totalHours: row[7] || "",
-    }));
+    const records = await getMonthlyAttendance(year, month);
 
     return NextResponse.json(records);
   } catch (error) {

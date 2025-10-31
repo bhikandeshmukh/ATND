@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateAttendanceCheckOut } from "@/lib/googleSheets";
+import { updateCheckOut } from "@/lib/firebase/attendance";
 
 export async function PUT(request: NextRequest) {
   try {
@@ -13,21 +13,13 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
-    await updateAttendanceCheckOut(spreadsheetId, {
+    await updateCheckOut(
       employeeName,
       date,
       outTime,
       outLocation,
-      modifiedBy: modifiedBy || undefined,
-    });
+      modifiedBy || undefined
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

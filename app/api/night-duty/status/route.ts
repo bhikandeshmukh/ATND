@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateNightDutyStatus, getAllNightDutyRequests } from "@/lib/googleSheets";
-import { getEmployees } from "@/lib/employees";
+import { updateNightDutyStatus, getAllNightDutyRequests } from "@/lib/firebase/nightDuty";
+import { getAllEmployees } from "@/lib/firebase/employees";
 import { createNotification, NotificationType } from "@/lib/notifications/service";
 import { logNightDutyAction } from "@/lib/audit/service";
 import { cache, CacheKeys } from "@/lib/cache/simple-cache";
@@ -17,16 +17,8 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
     // Get request details before updating
-    const requests = await getAllNightDutyRequests(spreadsheetId);
+    const requests = await getAllNightDutyRequests();
     const nightDutyRequest = requests.find((r) => r.id === id);
 
     if (!nightDutyRequest) {
@@ -36,11 +28,11 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    await updateNightDutyStatus(spreadsheetId, id, status, approvedBy);
+    await updateNightDutyStatus(id, status, approvedBy);
 
     // Send notification to employee
     try {
-      const employees = await getEmployees(spreadsheetId);
+      const employees = await getAllEmployees();
       const employee = employees.find((emp) => emp.name === nightDutyRequest.employeeName);
 
       if (employee) {
@@ -56,28 +48,31 @@ export async function PUT(req: NextRequest) {
           ? `Your night duty request for ${nightDutyRequest.date} has been approved by ${approvedBy || "Admin"}. Attendance has been automatically recorded.`
           : `Your night duty request for ${nightDutyRequest.date} has been rejected by ${approvedBy || "Admin"}`;
 
-        await createNotification(spreadsheetId, {
-          userId: employee.id,
-          type: notifType,
-          title: notifTitle,
-          message: notifMessage,
-          data: {
-            requestId: id,
-            date: nightDutyRequest.date,
-            status,
-            approvedBy,
-          },
-        });
+        const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
+        if (spreadsheetId) {
+          await createNotification(spreadsheetId, {
+            userId: employee.id || '',
+            type: notifType,
+            title: notifTitle,
+            message: notifMessage,
+            data: {
+              requestId: id,
+              date: nightDutyRequest.date,
+              status,
+              approvedBy,
+            },
+          });
 
-        // Create audit log
-        await logNightDutyAction(spreadsheetId, {
-          requestId: id,
-          employeeId: employee.id,
-          employeeName: employee.name,
-          action: status === "approved" ? "APPROVE" : "REJECT",
-          performedBy: approvedBy || "Admin",
-          performedById: approvedById || "ADMIN",
-        });
+          // Create audit log
+          await logNightDutyAction(spreadsheetId, {
+            requestId: id,
+            employeeId: employee.id || '',
+            employeeName: employee.name,
+            action: status === "approved" ? "APPROVE" : "REJECT",
+            performedBy: approvedBy || "Admin",
+            performedById: approvedById || "ADMIN",
+          });
+        }
       }
     } catch (notifError) {
       console.error("Error sending notification:", notifError);

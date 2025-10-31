@@ -11,6 +11,7 @@ export default function EmployeeManagement() {
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
     name: "",
@@ -24,6 +25,7 @@ export default function EmployeeManagement() {
     fixedSalary: "",
     username: "",
     password: "",
+    email: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -53,7 +55,7 @@ export default function EmployeeManagement() {
 
     const filtered = employees.filter((emp) =>
       emp.name.toLowerCase().includes(query.toLowerCase()) ||
-      emp.position.toLowerCase().includes(query.toLowerCase()) ||
+      emp.position?.toLowerCase().includes(query.toLowerCase()) ||
       emp.id.toLowerCase().includes(query.toLowerCase()) ||
       emp.username?.toLowerCase().includes(query.toLowerCase())
     );
@@ -69,40 +71,83 @@ export default function EmployeeManagement() {
     fetchEmployees();
   }, []);
 
+  const handleEdit = (employee: Employee) => {
+    setEditingEmployee(employee);
+    setFormData({
+      name: employee.name,
+      position: employee.position || "",
+      role: employee.role,
+      status: employee.status || "active",
+      totalWorkingDays: employee.totalWorkingDays?.toString() || "",
+      fixedInTime: employee.fixedInTime || "",
+      fixedOutTime: employee.fixedOutTime || "",
+      perMinuteRate: employee.perMinuteRate?.toString() || "",
+      fixedSalary: employee.fixedSalary?.toString() || "",
+      username: employee.username || "",
+      password: "", // Don't show existing password
+      email: employee.email || "",
+    });
+    setShowForm(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingEmployee(null);
+    setFormData({
+      name: "",
+      position: "",
+      role: "user",
+      status: "active",
+      totalWorkingDays: "",
+      fixedInTime: "",
+      fixedOutTime: "",
+      perMinuteRate: "",
+      fixedSalary: "",
+      username: "",
+      password: "",
+      email: "",
+    });
+    setShowForm(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setMessage("");
 
     try {
-      const response = await fetch("/api/employees", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        showToast("Employee added successfully!", "success");
-        setFormData({
-          name: "",
-          position: "",
-          role: "user",
-          status: "active",
-          totalWorkingDays: "",
-          fixedInTime: "",
-          fixedOutTime: "",
-          perMinuteRate: "",
-          fixedSalary: "",
-          username: "",
-          password: "",
+      if (editingEmployee) {
+        // Update existing employee
+        const response = await fetch(`/api/employees/${editingEmployee.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
         });
-        setShowForm(false);
-        fetchEmployees();
+
+        if (response.ok) {
+          showToast("Employee updated successfully!", "success");
+          handleCancelEdit();
+          fetchEmployees();
+        } else {
+          showToast("Error updating employee", "error");
+        }
       } else {
-        showToast("Error adding employee", "error");
+        // Create new employee
+        const response = await fetch("/api/employees", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+
+        if (response.ok) {
+          showToast("Employee added successfully!", "success");
+          handleCancelEdit();
+          fetchEmployees();
+        } else {
+          showToast("Error adding employee", "error");
+        }
       }
     } catch (error) {
-      showToast("Error adding employee", "error");
+      showToast(editingEmployee ? "Error updating employee" : "Error adding employee", "error");
     } finally {
       setSubmitting(false);
     }
@@ -143,7 +188,7 @@ export default function EmployeeManagement() {
             Export
           </button>
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => showForm ? handleCancelEdit() : setShowForm(true)}
             className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             {showForm ? "Cancel" : "+ Add Employee"}
@@ -160,6 +205,9 @@ export default function EmployeeManagement() {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-gray-50 p-3 sm:p-4 rounded-lg space-y-3">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">
+            {editingEmployee ? "✏️ Edit Employee" : "➕ Add New Employee"}
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -308,6 +356,19 @@ export default function EmployeeManagement() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="employee@company.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           <button
@@ -315,7 +376,7 @@ export default function EmployeeManagement() {
             disabled={submitting}
             className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400"
           >
-            {submitting ? "Adding..." : "Add Employee"}
+            {submitting ? (editingEmployee ? "Updating..." : "Adding...") : (editingEmployee ? "Update Employee" : "Add Employee")}
           </button>
 
           {message && (
@@ -344,6 +405,7 @@ export default function EmployeeManagement() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Per Min Rate</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fixed Salary</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
@@ -377,13 +439,22 @@ export default function EmployeeManagement() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹{employee.perMinuteRate}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹{employee.fixedSalary}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.username || "-"}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{employee.email || "-"}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button
-                    onClick={() => handleDelete(employee.id)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleEdit(employee)}
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(employee.id)}
+                      className="text-red-600 hover:text-red-800 font-medium"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
               ))}

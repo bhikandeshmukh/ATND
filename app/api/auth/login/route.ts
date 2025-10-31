@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       clearRateLimit(rateLimitKey);
       const token = generateToken({
         userId: user.id,
-        username: user.username,
+        username: user.username || user.id,
         role: user.role,
         name: user.name,
       });

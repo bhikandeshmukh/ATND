@@ -78,6 +78,7 @@ export default function NightDutyRequestSection({ userRole, userName }: NightDut
                     employeeName: empName,
                     date: selectedDate,
                     reason: reason.trim(),
+                    requestedBy: userName || empName,
                 }),
             });
 

@@ -28,6 +28,7 @@ export default function LeaveManagement({ userRole, userName, adminName }: Leave
     const [leaves, setLeaves] = useState<LeaveRecord[]>([]);
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [processingId, setProcessingId] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         employeeName: userName || "",
         leaveType: "sick",
@@ -105,6 +106,9 @@ export default function LeaveManagement({ userRole, userName, adminName }: Leave
     };
 
     const handleStatusUpdate = async (id: string, status: "approved" | "rejected", paymentStatus?: string) => {
+        if (processingId) return; // Prevent duplicate clicks
+        
+        setProcessingId(id);
         try {
             const response = await fetch("/api/leaves/status", {
                 method: "PUT",
@@ -125,10 +129,14 @@ export default function LeaveManagement({ userRole, userName, adminName }: Leave
             }
         } catch (error) {
             alert("❌ Error updating leave status");
+        } finally {
+            setProcessingId(null);
         }
     };
 
     const handleApproveWithPayment = (id: string, leaveType: string) => {
+        if (processingId) return; // Prevent duplicate clicks
+        
         // Sick and Casual leaves are unpaid by default
         const defaultPaymentStatus = (leaveType === "sick" || leaveType === "casual") ? "unpaid" : "paid";
 
@@ -366,15 +374,17 @@ export default function LeaveManagement({ userRole, userName, adminName }: Leave
                                                     <div className="flex gap-2">
                                                         <button
                                                             onClick={() => handleApproveWithPayment(leave.id, leave.leaveType)}
-                                                            className="text-green-600 hover:text-green-800 text-xs"
+                                                            disabled={processingId === leave.id}
+                                                            className="text-green-600 hover:text-green-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
-                                                            ✓ Approve
+                                                            {processingId === leave.id ? "⏳" : "✓"} Approve
                                                         </button>
                                                         <button
                                                             onClick={() => handleStatusUpdate(leave.id, "rejected")}
-                                                            className="text-red-600 hover:text-red-800 text-xs"
+                                                            disabled={processingId === leave.id}
+                                                            className="text-red-600 hover:text-red-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
-                                                            ✗ Reject
+                                                            {processingId === leave.id ? "⏳" : "✗"} Reject
                                                         </button>
                                                     </div>
                                                 )}

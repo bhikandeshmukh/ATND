@@ -16,8 +16,16 @@ export async function PUT(
 ) {
   try {
     const notificationId = params.id;
+    const { userId } = await request.json();
 
-    await markNotificationAsRead(SPREADSHEET_ID, notificationId);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User ID required" },
+        { status: 400 }
+      );
+    }
+
+    await markNotificationAsRead(SPREADSHEET_ID, userId, notificationId);
 
     return NextResponse.json({
       success: true,

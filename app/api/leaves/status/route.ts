@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateLeaveStatus, getAllLeaves } from "@/lib/googleSheets";
-import { getEmployees } from "@/lib/employees";
+import { updateLeaveStatus as updateFirebaseLeaveStatus, getAllLeaveRequests } from "@/lib/firebase/leaves";
+import { getAllEmployees } from "@/lib/firebase/employees";
 import { createNotification, NotificationType } from "@/lib/notifications/service";
 import { logLeaveAction } from "@/lib/audit/service";
 import { cache, CacheKeys } from "@/lib/cache/simple-cache";
@@ -19,16 +19,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    if (!spreadsheetId) {
-      return NextResponse.json(
-        { error: "Spreadsheet ID not configured" },
-        { status: 500 }
-      );
-    }
-
     // Get leave details before updating
-    const leaves = await getAllLeaves(spreadsheetId);
+    const leaves = await getAllLeaveRequests();
     const leave = leaves.find((l) => l.id === id);
 
     if (!leave) {
@@ -38,11 +30,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    await updateLeaveStatus(spreadsheetId, id, status, paymentStatus, approvedBy);
+    // Update leave status in Firebase
+    await updateFirebaseLeaveStatus(id, status, paymentStatus, approvedBy);
 
     // Send notification to employee
     try {
-      const employees = await getEmployees(spreadsheetId);
+      const employees = await getAllEmployees();
       const employee = employees.find((emp) => emp.name === leave.employeeName);
 
       if (employee) {
@@ -58,30 +51,33 @@ export async function PUT(request: NextRequest) {
           ? `Your ${leave.leaveType} leave from ${leave.startDate} to ${leave.endDate} has been approved by ${approvedBy || "Admin"}`
           : `Your ${leave.leaveType} leave from ${leave.startDate} to ${leave.endDate} has been rejected by ${approvedBy || "Admin"}`;
 
-        await createNotification(spreadsheetId, {
-          userId: employee.id,
-          type: notifType,
-          title: notifTitle,
-          message: notifMessage,
-          data: {
-            leaveId: id,
-            leaveType: leave.leaveType,
-            startDate: leave.startDate,
-            endDate: leave.endDate,
-            status,
-            approvedBy,
-          },
-        });
+        const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
+        if (spreadsheetId) {
+          await createNotification(spreadsheetId, {
+            userId: employee.id || '',
+            type: notifType,
+            title: notifTitle,
+            message: notifMessage,
+            data: {
+              leaveId: id,
+              leaveType: leave.leaveType,
+              startDate: leave.startDate,
+              endDate: leave.endDate,
+              status,
+              approvedBy,
+            },
+          });
 
-        // Create audit log
-        await logLeaveAction(spreadsheetId, {
-          leaveId: id,
-          employeeId: employee.id,
-          employeeName: employee.name,
-          action: status === "approved" ? "APPROVE" : "REJECT",
-          performedBy: approvedBy || "Admin",
-          performedById: approvedById || "ADMIN",
-        });
+          // Create audit log
+          await logLeaveAction(spreadsheetId, {
+            leaveId: id,
+            employeeId: employee.id || '',
+            employeeName: employee.name,
+            action: status === "approved" ? "APPROVE" : "REJECT",
+            performedBy: approvedBy || "Admin",
+            performedById: approvedById || "ADMIN",
+          });
+        }
       }
     } catch (notifError) {
       console.error("Error sending notification:", notifError);

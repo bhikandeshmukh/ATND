@@ -7,6 +7,7 @@ interface NightDutyRequest {
   employeeName: string;
   date: string;
   reason: string;
+  requestedBy?: string;
   status: "pending" | "approved" | "rejected";
   requestedDate: string;
   approvedBy?: string;
@@ -21,6 +22,7 @@ interface NightDutyManagementProps {
 export default function NightDutyManagement({ adminName }: NightDutyManagementProps) {
   const [requests, setRequests] = useState<NightDutyRequest[]>([]);
   const [loading, setLoading] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRequests();
@@ -41,6 +43,9 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
   };
 
   const handleStatusUpdate = async (id: string, status: "approved" | "rejected") => {
+    if (processingId) return; // Prevent duplicate clicks
+    
+    setProcessingId(id);
     try {
       const response = await fetch("/api/night-duty/status", {
         method: "PUT",
@@ -60,6 +65,8 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
       }
     } catch (error) {
       alert("❌ Error updating request status");
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -106,6 +113,9 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
                     Reason
                   </th>
                   <th className="px-3 py-2 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">
+                    Requested By
+                  </th>
+                  <th className="px-3 py-2 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">
                     Status
                   </th>
                   <th className="px-3 py-2 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">
@@ -137,6 +147,9 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
                     <td className="px-3 py-2 text-xs sm:text-sm text-gray-900 max-w-xs truncate">
                       {request.reason}
                     </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-xs sm:text-sm text-gray-700">
+                      {request.requestedBy || request.employeeName}
+                    </td>
                     <td className="px-3 py-2 whitespace-nowrap text-xs sm:text-sm">
                       <span
                         className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-semibold ${getStatusColor(
@@ -160,15 +173,17 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleStatusUpdate(request.id, "approved")}
-                            className="text-green-600 hover:text-green-800 text-xs"
+                            disabled={processingId === request.id}
+                            className="text-green-600 hover:text-green-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            ✓ Approve
+                            {processingId === request.id ? "⏳" : "✓"} Approve
                           </button>
                           <button
                             onClick={() => handleStatusUpdate(request.id, "rejected")}
-                            className="text-red-600 hover:text-red-800 text-xs"
+                            disabled={processingId === request.id}
+                            className="text-red-600 hover:text-red-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            ✗ Reject
+                            {processingId === request.id ? "⏳" : "✗"} Reject
                           </button>
                         </div>
                       )}
