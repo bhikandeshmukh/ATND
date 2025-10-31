@@ -97,8 +97,8 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar - Always visible on desktop, toggle on mobile */}
-      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} w-64 ${sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'} fixed lg:static inset-y-0 left-0 z-50 bg-slate-700 text-white transition-all duration-300 ease-in-out flex flex-col shadow-xl`}>
+      {/* Sidebar - Hidden by default, toggle on click */}
+      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} w-64 ${sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'} fixed inset-y-0 left-0 z-50 bg-slate-700 text-white transition-all duration-300 ease-in-out flex flex-col shadow-xl`}>
         {/* Sidebar Header */}
         <div className="p-4 border-b border-slate-600 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -207,10 +207,10 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* Overlay for mobile */}
+      {/* Overlay - Shows when sidebar is open */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -220,15 +220,16 @@ export default function Home() {
         {/* Top Header */}
         <header className="bg-white shadow-sm sticky top-0 z-30">
           <div className="flex items-center justify-between p-3 sm:p-4">
+            {/* Hamburger Menu - Same for Mobile & Desktop */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg lg:hidden"
+              className="p-2 hover:bg-gray-100 rounded-lg"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900 flex-1 text-center lg:text-left">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 flex-1 text-center">
               Attendance Tracker
             </h1>
             <NotificationBell userId={user.id} userName={user.name} />
