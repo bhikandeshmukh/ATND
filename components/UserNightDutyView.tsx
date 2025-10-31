@@ -45,7 +45,8 @@ export default function UserNightDutyView({ userName }: UserNightDutyViewProps) 
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    const lowerStatus = status.toLowerCase();
+    switch (lowerStatus) {
       case "approved":
         return "bg-green-100 text-green-800";
       case "rejected":
