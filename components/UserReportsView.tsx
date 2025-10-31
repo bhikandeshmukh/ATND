@@ -114,9 +114,40 @@ export default function UserReportsView({ userName }: UserReportsViewProps) {
         </div>
 
         {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading records...</p>
+          <div className="space-y-4">
+            {/* Summary Cards Skeleton */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-pulse">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-gray-100 rounded-lg p-4">
+                  <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                  <div className="h-8 bg-gray-300 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Table Skeleton */}
+            <div className="animate-pulse mt-6">
+              <div className="h-6 bg-gray-300 rounded w-1/4 mb-3"></div>
+              <div className="bg-gray-100 rounded-t-lg p-3 mb-2">
+                <div className="grid grid-cols-6 gap-2">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-3 bg-gray-300 rounded"></div>
+                  ))}
+                </div>
+              </div>
+              {[...Array(5)].map((_, rowIndex) => (
+                <div key={rowIndex} className="bg-white border-b p-3">
+                  <div className="grid grid-cols-6 gap-2">
+                    {[...Array(6)].map((_, colIndex) => (
+                      <div key={colIndex} className="h-3 bg-gray-200 rounded"></div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <div className="text-center py-4">
+                <p className="text-gray-500 text-sm animate-pulse">Loading attendance records...</p>
+              </div>
+            </div>
           </div>
         ) : records.length > 0 ? (
           <>

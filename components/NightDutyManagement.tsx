@@ -120,9 +120,30 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
 
       <div className="bg-white rounded-lg shadow-md p-3 sm:p-4">
         {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 text-sm">Loading...</p>
+          <div className="animate-pulse">
+            {/* Table Header Skeleton */}
+            <div className="bg-gray-100 rounded-t-lg p-3 mb-2">
+              <div className="grid grid-cols-10 gap-2">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="h-3 bg-gray-300 rounded"></div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Table Rows Skeleton */}
+            {[...Array(5)].map((_, rowIndex) => (
+              <div key={rowIndex} className="bg-white border-b p-3">
+                <div className="grid grid-cols-10 gap-2">
+                  {[...Array(10)].map((_, colIndex) => (
+                    <div key={colIndex} className="h-3 bg-gray-200 rounded"></div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            
+            <div className="text-center py-4">
+              <p className="text-gray-500 text-sm animate-pulse">Loading night duty requests...</p>
+            </div>
           </div>
         ) : requests.length > 0 ? (
           <div className="overflow-x-auto">
