@@ -170,10 +170,13 @@ export async function getNightDutyByEmployee(employeeName: string): Promise<Nigh
  */
 export async function updateNightDutyStatus(
   dutyId: string,
-  status: 'approved' | 'rejected',
+  status: string,
   approvedBy?: string
 ): Promise<void> {
   try {
+    // Normalize status to capitalize first letter
+    const normalizedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    
     // Find the night duty request across all employees
     const employeesSnapshot = await getDocs(collection(db, 'nightDuty'));
     
@@ -184,12 +187,21 @@ export async function updateNightDutyStatus(
       
       if (requestSnap.exists()) {
         const now = new Date();
+        const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+        
         await updateDoc(requestRef, {
-          '06_status': status,
+          '06_status': normalizedStatus,
           '10_approvedBy': approvedBy || '',
-          '11_approvedDate': now.toISOString().split('T')[0],
-          '12_approvedTime': now.toLocaleTimeString('en-US', { hour12: true }),
+          '11_approvedDate': istTime.toISOString().split('T')[0],
+          '12_approvedTime': istTime.toLocaleTimeString('en-US', { 
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true 
+          }).toUpperCase(),
         });
+        
+        console.log(`✅ Night duty ${dutyId} updated to ${normalizedStatus}`);
         return;
       }
     }

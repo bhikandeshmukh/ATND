@@ -44,13 +44,20 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
 
   const handleStatusUpdate = async (id: string, status: "approved" | "rejected") => {
     // Only prevent duplicate clicks for the SAME request
-    if (processingId === id) return;
+    if (processingId === id) {
+      console.log(`Already processing request ${id}`);
+      return;
+    }
 
+    console.log(`Starting to ${status} request ${id}`);
     setProcessingId(id);
+    
     try {
       // Capitalize first letter for API
       const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1);
 
+      console.log(`Sending API request for ${id} with status ${capitalizedStatus}`);
+      
       const response = await fetch("/api/night-duty/status", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -62,17 +69,23 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
         }),
       });
 
+      console.log(`API response status: ${response.status}`);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log(`✅ Success:`, result);
         alert(`✅ Night duty request ${status} successfully!`);
         await fetchRequests();
       } else {
         const errorData = await response.json();
+        console.error(`❌ API Error:`, errorData);
         alert(`❌ Failed to update request status: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error("Error updating request status:", error);
-      alert("❌ Error updating request status");
+      console.error("❌ Exception in handleStatusUpdate:", error);
+      alert(`❌ Error updating request status: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
+      console.log(`Finished processing request ${id}`);
       setProcessingId(null);
     }
   };
