@@ -9,6 +9,8 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { id, status, approvedBy, approvedById } = body;
 
+    console.log(`📥 Received update request:`, { id, status, approvedBy, approvedById });
+
     if (!id || !status) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -17,16 +19,24 @@ export async function PUT(req: NextRequest) {
     }
 
     // Get request details before updating
+    console.log(`📋 Fetching all night duty requests...`);
     const requests = await getAllNightDutyRequests();
+    console.log(`📊 Total requests found: ${requests.length}`);
+    console.log(`🔍 Looking for request with ID: ${id}`);
+    
     const nightDutyRequest = requests.find((r) => r.id === id);
 
     if (!nightDutyRequest) {
+      console.error(`❌ Request not found in list. Available IDs:`, requests.map(r => r.id));
       return NextResponse.json(
-        { error: "Night duty request not found" },
+        { error: `Night duty request not found: ${id}` },
         { status: 404 }
       );
     }
 
+    console.log(`✅ Found request:`, nightDutyRequest);
+    console.log(`🔄 Updating status to: ${status}`);
+    
     await updateNightDutyStatus(id, status, approvedBy);
 
     // Send notification to employee

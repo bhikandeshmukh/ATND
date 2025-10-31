@@ -10,6 +10,7 @@ import {
   Timestamp,
   setDoc,
   getDoc,
+  addDoc,
 } from 'firebase/firestore';
 import { db } from './config';
 
@@ -42,12 +43,9 @@ export async function addLeaveRequest(leaveData: Omit<LeaveRequest, 'id'>): Prom
       lastUpdated: Timestamp.now(),
     }, { merge: true });
 
-    // Generate unique ID for this request (using timestamp + random)
-    const requestId = `${leaveData.appliedDate}_${Date.now()}`;
-    
-    // Add leave request as subcollection
-    await setDoc(doc(db, 'leaveRequests', employeeName, 'requests', requestId), {
-      '01_id': requestId,
+    // Add leave request as subcollection with auto-generated ID
+    const requestsRef = collection(db, 'leaveRequests', employeeName, 'requests');
+    const docRef = await addDoc(requestsRef, {
       '02_leaveType': requestData.leaveType,
       '03_startDate': requestData.startDate,
       '04_endDate': requestData.endDate,
@@ -61,7 +59,8 @@ export async function addLeaveRequest(leaveData: Omit<LeaveRequest, 'id'>): Prom
       '12_createdAt': Timestamp.now(),
     });
 
-    return requestId;
+    console.log(`✅ Leave request created with ID: ${docRef.id} for ${employeeName}`);
+    return docRef.id;
   } catch (error) {
     console.error('Error adding leave request:', error);
     throw error;

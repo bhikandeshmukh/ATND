@@ -10,6 +10,7 @@ import {
   Timestamp,
   setDoc,
   getDoc,
+  addDoc,
 } from 'firebase/firestore';
 import { db } from './config';
 
@@ -43,15 +44,12 @@ export async function addNightDutyRequest(dutyData: Omit<NightDutyRequest, 'id'>
       lastUpdated: Timestamp.now(),
     }, { merge: true });
 
-    // Use date as the request ID (one request per date per employee)
-    const requestId = date;
-    
     const now = new Date();
     const requestedTime = now.toLocaleTimeString('en-US', { hour12: true });
     
-    // Add night duty request as subcollection
-    await setDoc(doc(db, 'nightDuty', employeeName, 'requests', requestId), {
-      '01_id': requestId,
+    // Add night duty request as subcollection with auto-generated ID
+    const requestsRef = collection(db, 'nightDuty', employeeName, 'requests');
+    const docRef = await addDoc(requestsRef, {
       '02_date': date,
       '03_startTime': requestData.startTime,
       '04_endTime': requestData.endTime,
@@ -66,7 +64,8 @@ export async function addNightDutyRequest(dutyData: Omit<NightDutyRequest, 'id'>
       '13_createdAt': Timestamp.now(),
     });
 
-    return requestId;
+    console.log(`✅ Night duty request created with ID: ${docRef.id} for ${employeeName} on ${date}`);
+    return docRef.id;
   } catch (error) {
     console.error('Error adding night duty request:', error);
     throw error;
@@ -174,20 +173,27 @@ export async function updateNightDutyStatus(
   approvedBy?: string
 ): Promise<void> {
   try {
+    console.log(`🔍 Searching for night duty request with ID: ${dutyId}`);
+    
     // Normalize status to capitalize first letter
     const normalizedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
     
     // Find the night duty request across all employees
     const employeesSnapshot = await getDocs(collection(db, 'nightDuty'));
+    console.log(`📂 Found ${employeesSnapshot.docs.length} employees in nightDuty collection`);
     
     for (const employeeDoc of employeesSnapshot.docs) {
       const employeeName = employeeDoc.id;
       const requestRef = doc(db, 'nightDuty', employeeName, 'requests', dutyId);
       const requestSnap = await getDoc(requestRef);
       
+      console.log(`🔎 Checking ${employeeName}/requests/${dutyId} - Exists: ${requestSnap.exists()}`);
+      
       if (requestSnap.exists()) {
         const now = new Date();
         const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+        
+        console.log(`✏️ Updating document with status: ${normalizedStatus}`);
         
         await updateDoc(requestRef, {
           '06_status': normalizedStatus,
@@ -201,12 +207,13 @@ export async function updateNightDutyStatus(
           }).toUpperCase(),
         });
         
-        console.log(`✅ Night duty ${dutyId} updated to ${normalizedStatus}`);
+        console.log(`✅ Night duty ${dutyId} updated to ${normalizedStatus} for ${employeeName}`);
         return;
       }
     }
     
-    throw new Error('Night duty request not found');
+    console.error(`❌ Night duty request ${dutyId} not found in any employee collection`);
+    throw new Error(`Night duty request not found: ${dutyId}`);
   } catch (error) {
     console.error('Error updating night duty status:', error);
     throw error;
