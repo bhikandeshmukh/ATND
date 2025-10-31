@@ -31,8 +31,16 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/night-duty");
+      // Add timestamp to bypass cache
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/night-duty?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
       const data = await response.json();
+      console.log('Fetched night duty requests:', data);
       setRequests(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching night duty requests:", error);
@@ -51,13 +59,13 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
 
     console.log(`Starting to ${status} request ${id}`);
     setProcessingId(id);
-    
+
     try {
       // Capitalize first letter for API
       const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1);
 
       console.log(`Sending API request for ${id} with status ${capitalizedStatus}`);
-      
+
       const response = await fetch("/api/night-duty/status", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },

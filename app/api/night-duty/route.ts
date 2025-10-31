@@ -77,23 +77,17 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check cache
-    const cacheKey = CacheKeys.nightDuty();
-    const cachedData = cache.get(cacheKey);
-    
-    if (cachedData) {
-      return NextResponse.json(cachedData, {
-        headers: { 'X-Cache': 'HIT' }
-      });
-    }
-
+    // Always fetch fresh data - no caching for admin actions
+    console.log('Fetching fresh night duty requests from Firebase');
     const requests = await getAllNightDutyRequests();
-    
-    // Cache for 30 seconds
-    cache.set(cacheKey, requests, 30000);
+    console.log(`Found ${requests.length} night duty requests`);
     
     return NextResponse.json(requests, {
-      headers: { 'X-Cache': 'MISS' }
+      headers: { 
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     console.error("Error fetching night duty requests:", error);
