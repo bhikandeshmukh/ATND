@@ -14,6 +14,7 @@ import {
     Timestamp,
     deleteDoc,
     setDoc,
+    writeBatch,
 } from 'firebase/firestore';
 import { db } from './config';
 
@@ -152,18 +153,32 @@ export async function markNotificationAsRead(
 }
 
 /**
- * Mark all notifications as read for a user
+ * Mark all notifications as read for a user (optimized with batch)
  */
 export async function markAllAsRead(userId: string): Promise<number> {
     try {
         const unreadNotifications = await getUserNotifications(userId, true);
 
+        if (unreadNotifications.length === 0) {
+            return 0;
+        }
+
+        // Use batch for better performance
+        const batch = writeBatch(db);
+        
         for (const notification of unreadNotifications) {
             if (notification.id) {
-                await markNotificationAsRead(userId, notification.id);
+                const notifRef = doc(db, 'notifications', userId, 'items', notification.id);
+                batch.update(notifRef, {
+                    isRead: true,
+                    readAt: Timestamp.now(),
+                });
             }
         }
 
+        await batch.commit();
+        console.log(`✅ Marked ${unreadNotifications.length} notifications as read for user ${userId}`);
+        
         return unreadNotifications.length;
     } catch (error) {
         console.error('Error marking all as read:', error);

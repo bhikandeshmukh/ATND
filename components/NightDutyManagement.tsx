@@ -44,17 +44,17 @@ export default function NightDutyManagement({ adminName }: NightDutyManagementPr
 
   const handleStatusUpdate = async (id: string, status: "approved" | "rejected") => {
     if (processingId) return; // Prevent duplicate clicks
-    
+
     setProcessingId(id);
     try {
       // Capitalize first letter for API
       const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1);
-      
+
       const response = await fetch("/api/night-duty/status", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          id, 
+        body: JSON.stringify({
+          id,
           status: capitalizedStatus,
           approvedBy: adminName,
           approvedById: "ADMIN"

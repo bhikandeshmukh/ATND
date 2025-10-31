@@ -41,10 +41,14 @@ class NotificationService {
   /**
    * Mark a notification as read
    */
-  async markAsRead(notificationId: string): Promise<void> {
+  async markAsRead(notificationId: string, userId?: string): Promise<void> {
     try {
       const response = await fetch(`/api/notifications/${notificationId}/read`, {
         method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: userId || "unknown" }),
       });
 
       if (!response.ok) {

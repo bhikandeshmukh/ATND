@@ -47,7 +47,7 @@ export default function NotificationBell({ userId, userName }: NotificationBellP
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await notificationService.markAsRead(notificationId);
+      await notificationService.markAsRead(notificationId, userId);
       setNotifications((prev) =>
         prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
       );

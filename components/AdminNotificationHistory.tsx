@@ -50,10 +50,23 @@ export default function AdminNotificationHistory() {
         // Fetch notifications for all users
         const allNotifications: Notification[] = [];
         for (const emp of employees) {
-          const response = await fetch(`/api/notifications?userId=${emp.id}`);
-          if (response.ok) {
-            const data = await response.json();
-            allNotifications.push(...data);
+          if (emp.id) {
+            const response = await fetch(`/api/notifications?userId=${emp.id}`);
+            if (response.ok) {
+              const data = await response.json();
+              const notifications = data.notifications || [];
+              // Transform to match interface
+              const transformed = notifications.map((n: any) => ({
+                id: n.id,
+                userId: n.userId,
+                type: n.type,
+                title: n.title,
+                message: n.message,
+                isRead: n.read || n.isRead,
+                createdAt: n.createdAt,
+              }));
+              allNotifications.push(...transformed);
+            }
           }
         }
         // Sort by date
@@ -65,7 +78,18 @@ export default function AdminNotificationHistory() {
         const response = await fetch(`/api/notifications?userId=${selectedUserId}`);
         if (response.ok) {
           const data = await response.json();
-          setNotifications(Array.isArray(data) ? data : []);
+          const notifications = data.notifications || [];
+          // Transform to match interface
+          const transformed = notifications.map((n: any) => ({
+            id: n.id,
+            userId: n.userId,
+            type: n.type,
+            title: n.title,
+            message: n.message,
+            isRead: n.read || n.isRead,
+            createdAt: n.createdAt,
+          }));
+          setNotifications(transformed);
         }
       }
     } catch (error) {
