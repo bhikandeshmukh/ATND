@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 
 export async function PUT(
@@ -11,6 +11,34 @@ export async function PUT(
     const { name, position, role, status, totalWorkingDays, fixedInTime, fixedOutTime, perMinuteRate, fixedSalary, username, password } = body;
 
     const employeeId = params.id;
+
+    // Check if document exists
+    const docRef = doc(db, 'employees', employeeId);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return NextResponse.json(
+        { error: "Employee not found. Cannot update non-existent employee." },
+        { status: 404 }
+      );
+    }
+
+    // Check for duplicate name (excluding current employee)
+    const nameQuery = query(
+      collection(db, 'employees'),
+      where('02_name', '==', name)
+    );
+    const nameSnapshot = await getDocs(nameQuery);
+    
+    // Check if any other employee has the same name
+    const duplicateExists = nameSnapshot.docs.some(doc => doc.id !== employeeId);
+    
+    if (duplicateExists) {
+      return NextResponse.json(
+        { error: `Employee with name "${name}" already exists. Please use a different name.` },
+        { status: 400 }
+      );
+    }
 
     // Prepare update data
     const updateData: any = {
@@ -31,11 +59,11 @@ export async function PUT(
       updateData['12_password'] = password;
     }
 
-    // Use setDoc with merge to create or update (prevents NOT_FOUND error)
-    await setDoc(doc(db, 'employees', employeeId), updateData, { merge: true });
+    // Update existing document only (merge: true)
+    await setDoc(docRef, updateData, { merge: true });
 
     console.log(`✅ Employee ${employeeId} updated successfully`);
-    
+
     return NextResponse.json({ success: true, message: "Employee updated successfully" });
   } catch (error) {
     console.error("Error updating employee:", error);

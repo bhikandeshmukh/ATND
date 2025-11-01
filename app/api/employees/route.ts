@@ -49,6 +49,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for duplicate name before creating
+    const employees = await getEmployees(spreadsheetId);
+    const duplicateExists = employees.some(emp => emp.name.toLowerCase() === name.toLowerCase());
+    
+    if (duplicateExists) {
+      return NextResponse.json(
+        { error: `Employee with name "${name}" already exists. Please use a different name.` },
+        { status: 400 }
+      );
+    }
+
     const employeeId = await addEmployee(spreadsheetId, {
       name,
       position,
@@ -67,10 +78,10 @@ export async function POST(request: NextRequest) {
     invalidateRelated.employee();
 
     return NextResponse.json({ success: true, id: employeeId });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error adding employee:", error);
     return NextResponse.json(
-      { error: "Failed to add employee" },
+      { error: error?.message || "Failed to add employee" },
       { status: 500 }
     );
   }
