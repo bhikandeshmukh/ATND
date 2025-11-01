@@ -90,6 +90,6 @@ export async function getEmployeeById(spreadsheetId: string, employeeId: string)
  * Update employee (for backward compatibility)
  */
 export async function updateEmployee(spreadsheetId: string, employeeId: string, updates: Partial<Employee>): Promise<void> {
-  // This would need to be implemented in firebase/employees.ts if needed
-  console.warn("updateEmployee not yet implemented for Firebase");
+  const { updateEmployee: updateFirebaseEmployee } = await import('./firebase/employees');
+  await updateFirebaseEmployee(employeeId, updates);
 }

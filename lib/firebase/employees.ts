@@ -123,6 +123,37 @@ export async function addEmployee(employee: Omit<Employee, 'id' | 'createdAt'>):
   }
 }
 
+// Update employee
+export async function updateEmployee(employeeId: string, updates: Partial<Employee>): Promise<void> {
+  try {
+    const docRef = doc(db, COLLECTION_NAME, employeeId);
+    
+    // Convert updates to Firebase field format
+    const firebaseUpdates: any = {};
+    
+    if (updates.name !== undefined) firebaseUpdates['02_name'] = updates.name;
+    if (updates.position !== undefined) firebaseUpdates['03_position'] = updates.position;
+    if (updates.role !== undefined) firebaseUpdates['04_role'] = updates.role;
+    if (updates.status !== undefined) firebaseUpdates['05_status'] = updates.status;
+    if (updates.totalWorkingDays !== undefined) firebaseUpdates['06_totalWorkingDays'] = updates.totalWorkingDays;
+    if (updates.fixedInTime !== undefined) firebaseUpdates['07_fixedInTime'] = updates.fixedInTime;
+    if (updates.fixedOutTime !== undefined) firebaseUpdates['08_fixedOutTime'] = updates.fixedOutTime;
+    if (updates.perMinuteRate !== undefined) firebaseUpdates['09_perMinuteRate'] = updates.perMinuteRate;
+    if (updates.fixedSalary !== undefined) firebaseUpdates['10_fixedSalary'] = updates.fixedSalary;
+    if (updates.username !== undefined) firebaseUpdates['11_username'] = updates.username;
+    if (updates.password !== undefined) firebaseUpdates['12_password'] = updates.password;
+    if (updates.email !== undefined) firebaseUpdates['13_email'] = updates.email;
+    
+    // Use setDoc with merge to avoid "document not found" error
+    await setDoc(docRef, firebaseUpdates, { merge: true });
+    
+    console.log(`✅ Employee ${employeeId} updated successfully`);
+  } catch (error) {
+    console.error('Error updating employee:', error);
+    throw error;
+  }
+}
+
 // Delete employee
 export async function deleteEmployee(employeeId: string): Promise<void> {
   try {
