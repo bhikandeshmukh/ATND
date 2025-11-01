@@ -89,7 +89,7 @@ export async function addEmployee(employee: Omit<Employee, 'id' | 'createdAt'>):
     }
 
     const id = String(nextId).padStart(3, '0');
-    
+
     // Create safe document ID from name
     const safeId = employee.name
       .toLowerCase()
@@ -127,10 +127,10 @@ export async function addEmployee(employee: Omit<Employee, 'id' | 'createdAt'>):
 export async function updateEmployee(employeeId: string, updates: Partial<Employee>): Promise<void> {
   try {
     const docRef = doc(db, COLLECTION_NAME, employeeId);
-    
+
     // Convert updates to Firebase field format
     const firebaseUpdates: any = {};
-    
+
     if (updates.name !== undefined) firebaseUpdates['02_name'] = updates.name;
     if (updates.position !== undefined) firebaseUpdates['03_position'] = updates.position;
     if (updates.role !== undefined) firebaseUpdates['04_role'] = updates.role;
@@ -143,10 +143,10 @@ export async function updateEmployee(employeeId: string, updates: Partial<Employ
     if (updates.username !== undefined) firebaseUpdates['11_username'] = updates.username;
     if (updates.password !== undefined) firebaseUpdates['12_password'] = updates.password;
     if (updates.email !== undefined) firebaseUpdates['13_email'] = updates.email;
-    
+
     // Use setDoc with merge to avoid "document not found" error
     await setDoc(docRef, firebaseUpdates, { merge: true });
-    
+
     console.log(`✅ Employee ${employeeId} updated successfully`);
   } catch (error) {
     console.error('Error updating employee:', error);

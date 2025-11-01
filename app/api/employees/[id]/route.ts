@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateDoc, doc } from "firebase/firestore";
+import { setDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 
 export async function PUT(
@@ -31,8 +31,11 @@ export async function PUT(
       updateData['12_password'] = password;
     }
 
-    await updateDoc(doc(db, 'employees', employeeId), updateData);
+    // Use setDoc with merge to create or update (prevents NOT_FOUND error)
+    await setDoc(doc(db, 'employees', employeeId), updateData, { merge: true });
 
+    console.log(`✅ Employee ${employeeId} updated successfully`);
+    
     return NextResponse.json({ success: true, message: "Employee updated successfully" });
   } catch (error) {
     console.error("Error updating employee:", error);
