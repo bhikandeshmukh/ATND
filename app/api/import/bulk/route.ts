@@ -4,6 +4,7 @@ import { addCheckIn } from "@/lib/firebase/attendance";
 import { addLeaveRequest } from "@/lib/firebase/leaves";
 import { addNightDutyRequest } from "@/lib/firebase/nightDuty";
 import { createNotification } from "@/lib/firebase/notifications";
+import { parseCSVLine, processCsvRow } from "@/lib/utils/csv-processor";
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +29,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const headers = lines[0].split(",").map(h => h.trim());
+    // Use enhanced CSV parsing to handle quotes and special characters
+    const headers = parseCSVLine(lines[0]);
     const dataLines = lines.slice(1);
 
     let success = 0;
@@ -39,25 +41,28 @@ export async function POST(request: NextRequest) {
       const line = dataLines[i].trim();
       if (!line) continue;
 
-      const values = line.split(",").map(v => v.trim());
-      const row: any = {};
+      // Use enhanced CSV parsing to handle quotes and special characters
+      const values = parseCSVLine(line);
+      const rawRow: any = {};
       
       headers.forEach((header, index) => {
-        row[header] = values[index] || "";
+        rawRow[header] = values[index] || "";
       });
 
       try {
+        // Process the row with sanitization and format conversion
+        const row = processCsvRow(rawRow, type);
         if (type === "employees") {
           await addFirebaseEmployee({
             name: row["Name"],
             position: row["Position"],
             role: row["Role"]?.toLowerCase() === "admin" ? "admin" : "user",
             status: row["Status"]?.toLowerCase() === "inactive" ? "inactive" : "active",
-            totalWorkingDays: parseInt(row["Total Working Days"]) || 26,
-            fixedInTime: row["Fixed In Time"] || "09:00:00 AM",
-            fixedOutTime: row["Fixed Out Time"] || "07:00:00 PM",
-            perMinuteRate: parseFloat(row["Per Minute Rate"]) || 0,
-            fixedSalary: parseFloat(row["Fixed Salary"]) || 0,
+            totalWorkingDays: row["Total Working Days"], // Already converted to number
+            fixedInTime: row["Fixed In Time"] || "09:00:00 AM", // Already converted to proper time format
+            fixedOutTime: row["Fixed Out Time"] || "07:00:00 PM", // Already converted to proper time format
+            perMinuteRate: row["Per Minute Rate"], // Already converted to number
+            fixedSalary: row["Fixed Salary"], // Already converted to number
             username: row["Username"],
             password: row["Password"],
           });
@@ -65,16 +70,16 @@ export async function POST(request: NextRequest) {
         } else if (type === "attendance") {
           await addCheckIn({
             employeeName: row["Employee Name"],
-            date: row["Date"],
-            inTime: row["In Time"],
-            outTime: row["Out Time"],
+            date: row["Date"], // Already converted to YYYY-MM-DD format
+            inTime: row["In Time"], // Already converted to proper time format
+            outTime: row["Out Time"], // Already converted to proper time format
             inLocation: row["In Location"],
             outLocation: row["Out Location"],
-            totalMinutes: parseInt(row["Total Minutes"]) || 0,
+            totalMinutes: row["Total Minutes"], // Already converted to number
             totalHours: row["Total Hours"],
             modifiedBy: row["Modified By"],
-            overtimeMinutes: parseInt(row["Overtime Minutes"]) || 0,
-            overtimePay: parseFloat(row["Overtime Pay"]) || 0,
+            overtimeMinutes: row["Overtime Minutes"], // Already converted to number
+            overtimePay: row["Overtime Pay"], // Already converted to number
             isHoliday: row["Is Holiday"],
           });
           success++;
@@ -82,23 +87,23 @@ export async function POST(request: NextRequest) {
           await addLeaveRequest({
             employeeName: row["Employee Name"],
             leaveType: row["Leave Type"],
-            startDate: row["Start Date"],
-            endDate: row["End Date"],
+            startDate: row["Start Date"], // Already converted to YYYY-MM-DD format
+            endDate: row["End Date"], // Already converted to YYYY-MM-DD format
             reason: row["Reason"],
             status: row["Status"] || "pending",
             paymentStatus: row["Payment Status"],
-            appliedDate: row["Applied Date"] || new Date().toISOString().split("T")[0],
+            appliedDate: row["Applied Date"] || new Date().toISOString().split("T")[0], // Already converted to YYYY-MM-DD format
           });
           success++;
         } else if (type === "nightDuty") {
           await addNightDutyRequest({
             employeeName: row["Employee Name"],
-            date: row["Date"],
-            startTime: row["Start Time"] || "09:00:00 PM",
-            endTime: row["End Time"] || "07:00:00 AM",
+            date: row["Date"], // Already converted to YYYY-MM-DD format
+            startTime: row["Start Time"] || "09:00:00 PM", // Already converted to proper time format
+            endTime: row["End Time"] || "07:00:00 AM", // Already converted to proper time format
             reason: row["Reason"],
             status: row["Status"] || "pending",
-            appliedDate: row["Applied Date"] || new Date().toISOString().split("T")[0],
+            appliedDate: row["Applied Date"] || new Date().toISOString().split("T")[0], // Already converted to YYYY-MM-DD format
             requestedBy: row["Requested By"] || row["Employee Name"],
           });
           success++;

@@ -25,15 +25,16 @@ export default function BulkImport() {
 
         attendance: `Date,Employee Name,In Time,Out Time,In Location,Out Location,Total Minutes,Total Hours,Modified By,Overtime Minutes,Overtime Pay,Is Holiday
 2025-10-30,BHIKAN,09:00:00 AM,07:00:00 PM,21.169707 72.850052,21.177958 72.820326,600,10:00,,,0,0,
-2025-10-31,ADMIN,09:00:00 AM,06:00:00 PM,21.169707 72.850052,21.177958 72.820326,540,9:00,,,0,0,`,
+30/10/2025,ADMIN,9:00 AM,6:00 PM,21.169707 72.850052,21.177958 72.820326,540,9:00,,,0,0,
+Oct 31 2025,KARAN,09:00,19:00,21.169707 72.850052,21.177958 72.820326,600,10:00,,,0,0,`,
 
         leaves: `Employee Name,Leave Type,Start Date,End Date,Reason,Status,Payment Status,Applied Date
-BHIKAN,casual,2025-11-01,2025-11-03,Personal work,pending,,2025-10-30
-ADMIN,sick,2025-11-05,2025-11-06,Medical checkup,approved,paid,2025-10-29`,
+BHIKAN,casual,01/11/2025,03/11/2025,Personal work,pending,,30/10/2025
+ADMIN,sick,Nov 05 2025,Nov 06 2025,Medical checkup,approved,paid,29-10-2025`,
 
         nightDuty: `Employee Name,Date,Start Time,End Time,Reason,Status,Applied Date,Requested By
-BHIKAN,2025-11-01,09:00:00 PM,07:00:00 AM,Security duty,pending,2025-10-30,BHIKAN
-KARAN,2025-11-02,09:00:00 PM,07:00:00 AM,Night shift,approved,2025-10-29,ADMIN`,
+BHIKAN,01/11/2025,21:00,07:00,Security duty,pending,30/10/2025,BHIKAN
+KARAN,Nov 02 2025,9:00 PM,7:00 AM,Night shift,approved,29-10-2025,ADMIN`,
 
         notifications: `User ID,Type,Title,Message,Send To All
 002,system_alert,System Maintenance,System will be down from 10 PM to 11 PM,no
@@ -257,6 +258,36 @@ all,system_alert,Holiday Notice,Tomorrow is a public holiday,yes`,
                         <span className="font-bold text-blue-600">6.</span>
                         <p>Review the import results and fix any errors if needed</p>
                     </div>
+                </div>
+                
+                {/* Supported Formats */}
+                <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-green-900 mb-3">✅ Supported Date & Time Formats</h4>
+                    <div className="grid md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p className="font-medium text-green-800 mb-2">📅 Date Formats:</p>
+                            <ul className="space-y-1 text-green-700">
+                                <li>• 2025-10-30 (YYYY-MM-DD)</li>
+                                <li>• 30/10/2025 (DD/MM/YYYY)</li>
+                                <li>• 10/30/2025 (MM/DD/YYYY)</li>
+                                <li>• 30-10-2025 (DD-MM-YYYY)</li>
+                                <li>• Oct 30, 2025</li>
+                                <li>• 30 October 2025</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p className="font-medium text-green-800 mb-2">🕐 Time Formats:</p>
+                            <ul className="space-y-1 text-green-700">
+                                <li>• 09:00:00 AM (12-hour)</li>
+                                <li>• 9:00 AM (12-hour short)</li>
+                                <li>• 09:00 (24-hour)</li>
+                                <li>• 21:00 (24-hour)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p className="text-xs text-green-600 mt-3">
+                        💡 The system automatically converts all formats to the database standard format
+                    </p>
                 </div>
             </div>
         </div>
