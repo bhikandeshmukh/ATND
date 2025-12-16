@@ -24,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
+    onGoogleSignInClick: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -34,6 +35,13 @@ fun LoginScreen(
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
             onLoginSuccess()
+        }
+    }
+    
+    LaunchedEffect(uiState.triggerGoogleSignIn) {
+        if (uiState.triggerGoogleSignIn) {
+            viewModel.onGoogleSignInTriggered()
+            onGoogleSignInClick()
         }
     }
     
@@ -170,13 +178,13 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Divider(modifier = Modifier.weight(1f), color = Color(0xFFE5E7EB))
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE5E7EB))
                     Text(
                         text = "  Or continue with  ",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF9CA3AF)
                     )
-                    Divider(modifier = Modifier.weight(1f), color = Color(0xFFE5E7EB))
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE5E7EB))
                 }
                 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -187,6 +195,7 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
+                    enabled = !uiState.isLoading,
                     shape = RoundedCornerShape(12.dp),
                     border = ButtonDefaults.outlinedButtonBorder,
                     colors = ButtonDefaults.outlinedButtonColors(
