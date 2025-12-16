@@ -2,7 +2,6 @@ package com.attendance.tracker
 
 import android.Manifest
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,13 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetCredentialResponse
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -36,32 +29,18 @@ import com.attendance.tracker.ui.screens.attendance.AttendanceScreen
 import com.attendance.tracker.ui.screens.employees.EmployeeScreen
 import com.attendance.tracker.ui.screens.leaves.LeaveScreen
 import com.attendance.tracker.ui.screens.login.LoginScreen
-import com.attendance.tracker.ui.screens.login.LoginViewModel
 import com.attendance.tracker.ui.screens.nightduty.NightDutyScreen
 import com.attendance.tracker.ui.screens.notifications.NotificationScreen
 import com.attendance.tracker.ui.screens.reports.ReportScreen
 import com.attendance.tracker.ui.theme.AttendanceTrackerTheme
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     
-    companion object {
-        private const val TAG = "MainActivity"
-        // Web Client ID from Firebase Console
-        private const val WEB_CLIENT_ID = "861215517427-63vg3pj14c421gf042ftu6b6r5pibrra.apps.googleusercontent.com"
-    }
-    
     @Inject
     lateinit var adMobManager: AdMobManager
-    
-    private lateinit var credentialManager: CredentialManager
-    private var loginViewModel: LoginViewModel? = null
     
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -82,9 +61,6 @@ class MainActivity : ComponentActivity() {
         // Initialize AdMob
         adMobManager.initialize()
         
-        // Initialize Credential Manager for Google Sign-In
-        credentialManager = CredentialManager.create(this)
-        
         // Request location permissions
         locationPermissionRequest.launch(arrayOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -95,70 +71,8 @@ class MainActivity : ComponentActivity() {
             AttendanceTrackerTheme {
                 AttendanceApp(
                     adMobManager = adMobManager, 
-                    activity = this,
-                    onGoogleSignIn = { viewModel -> 
-                        loginViewModel = viewModel
-                        startGoogleSignIn() 
-                    }
+                    activity = this
                 )
-            }
-        }
-    }
-    
-    private fun startGoogleSignIn() {
-        val googleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(WEB_CLIENT_ID)
-            .setAutoSelectEnabled(false)
-            .build()
-        
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
-        
-        lifecycleScope.launch {
-            try {
-                val result = credentialManager.getCredential(
-                    request = request,
-                    context = this@MainActivity
-                )
-                handleGoogleSignInResult(result)
-            } catch (e: GetCredentialException) {
-                Log.e(TAG, "Google Sign-In failed: ${e.message}", e)
-                loginViewModel?.onGoogleSignInError("Google Sign-In failed: ${e.message}")
-            }
-        }
-    }
-    
-    private fun handleGoogleSignInResult(result: GetCredentialResponse) {
-        when (val credential = result.credential) {
-            is CustomCredential -> {
-                if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                    try {
-                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                        val idToken = googleIdTokenCredential.idToken
-                        val googleId = googleIdTokenCredential.id
-                        val displayName = googleIdTokenCredential.displayName ?: "User"
-                        
-                        Log.d(TAG, "Google Sign-In successful: $displayName")
-                        
-                        loginViewModel?.handleGoogleSignInResult(
-                            googleId = googleId,
-                            email = googleId, // Google ID is usually the email
-                            displayName = displayName
-                        )
-                    } catch (e: GoogleIdTokenParsingException) {
-                        Log.e(TAG, "Invalid Google ID token", e)
-                        loginViewModel?.onGoogleSignInError("Invalid Google credentials")
-                    }
-                } else {
-                    Log.e(TAG, "Unexpected credential type")
-                    loginViewModel?.onGoogleSignInError("Unexpected credential type")
-                }
-            }
-            else -> {
-                Log.e(TAG, "Unexpected credential type")
-                loginViewModel?.onGoogleSignInError("Unexpected credential type")
             }
         }
     }
@@ -169,8 +83,7 @@ class MainActivity : ComponentActivity() {
 fun AttendanceApp(
     mainViewModel: MainViewModel = hiltViewModel(),
     adMobManager: AdMobManager? = null,
-    activity: ComponentActivity? = null,
-    onGoogleSignIn: (LoginViewModel) -> Unit = {}
+    activity: ComponentActivity? = null
 ) {
     val navController = rememberNavController()
     val currentUser by mainViewModel.currentUser.collectAsState()
@@ -296,16 +209,11 @@ fun AttendanceApp(
             modifier = Modifier.padding(paddingValues)
         ) {
             composable(Screen.Login.route) {
-                val loginViewModel: LoginViewModel = hiltViewModel()
                 LoginScreen(
-                    viewModel = loginViewModel,
                     onLoginSuccess = {
                         navController.navigate(Screen.Attendance.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
-                    },
-                    onGoogleSignInClick = {
-                        onGoogleSignIn(loginViewModel)
                     }
                 )
             }
