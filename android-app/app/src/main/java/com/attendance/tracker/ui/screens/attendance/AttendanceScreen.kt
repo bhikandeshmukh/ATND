@@ -216,13 +216,46 @@ fun RealTimeEarningCard(
     var currentEarning by remember { mutableStateOf(0.0) }
     var elapsedMinutes by remember { mutableStateOf(0) }
     
+    // Parse check-in time and calculate elapsed minutes
+    fun parseTimeToMinutes(timeStr: String): Int {
+        return try {
+            val parts = timeStr.split(" ")
+            val timeParts = parts[0].split(":")
+            var hours = timeParts[0].toInt()
+            val minutes = timeParts[1].toInt()
+            val period = parts.getOrNull(1)?.uppercase() ?: "AM"
+            
+            if (period == "PM" && hours != 12) hours += 12
+            if (period == "AM" && hours == 12) hours = 0
+            
+            hours * 60 + minutes
+        } catch (e: Exception) {
+            0
+        }
+    }
+    
+    fun getCurrentTimeMinutes(): Int {
+        val cal = Calendar.getInstance()
+        var hours = cal.get(Calendar.HOUR_OF_DAY)
+        val minutes = cal.get(Calendar.MINUTE)
+        return hours * 60 + minutes
+    }
+    
     LaunchedEffect(checkInTime) {
         while (true) {
-            val now = System.currentTimeMillis()
-            // Calculate elapsed time from check-in
-            // This is simplified - in production, parse checkInTime properly
-            elapsedMinutes = ((now / 60000) % 1440).toInt() // Simplified
-            currentEarning = elapsedMinutes * perMinuteRate
+            if (checkInTime.isNotEmpty()) {
+                val checkInMinutes = parseTimeToMinutes(checkInTime)
+                val currentMinutes = getCurrentTimeMinutes()
+                
+                elapsedMinutes = if (currentMinutes >= checkInMinutes) {
+                    currentMinutes - checkInMinutes
+                } else {
+                    // Handle overnight (crossed midnight)
+                    (24 * 60 - checkInMinutes) + currentMinutes
+                }
+                
+                currentEarning = elapsedMinutes * perMinuteRate
+            }
             kotlinx.coroutines.delay(60000) // Update every minute
         }
     }
@@ -239,7 +272,7 @@ fun RealTimeEarningCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "💰 Today's Earning",
+                text = "💰 Today's Earning (Live)",
                 style = MaterialTheme.typography.titleSmall,
                 color = Color(0xFF059669)
             )
@@ -260,6 +293,15 @@ fun RealTimeEarningCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF6B7280)
             )
+            
+            if (perMinuteRate > 0) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Rate: ₹${String.format("%.2f", perMinuteRate)}/min",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF9CA3AF)
+                )
+            }
         }
     }
 }

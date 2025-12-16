@@ -13,8 +13,7 @@ import javax.inject.Inject
 data class LoginUiState(
     val isLoading: Boolean = false,
     val isLoggedIn: Boolean = false,
-    val error: String? = null,
-    val triggerGoogleSignIn: Boolean = false
+    val error: String? = null
 )
 
 @HiltViewModel
@@ -46,52 +45,6 @@ class LoginViewModel @Inject constructor(
                 }
             )
         }
-    }
-    
-    fun signInWithGoogle() {
-        // Trigger Google Sign-In flow in Activity
-        _uiState.value = _uiState.value.copy(
-            triggerGoogleSignIn = true,
-            error = null
-        )
-    }
-    
-    fun onGoogleSignInTriggered() {
-        _uiState.value = _uiState.value.copy(triggerGoogleSignIn = false)
-    }
-    
-    fun handleGoogleSignInResult(
-        googleId: String,
-        email: String,
-        displayName: String
-    ) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            
-            val result = authRepository.saveGoogleUser(googleId, email, displayName)
-            
-            result.fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        isLoggedIn = true
-                    )
-                },
-                onFailure = { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = exception.message ?: "Google sign-in failed"
-                    )
-                }
-            )
-        }
-    }
-    
-    fun onGoogleSignInError(errorMessage: String) {
-        _uiState.value = _uiState.value.copy(
-            isLoading = false,
-            error = errorMessage
-        )
     }
     
     fun clearError() {

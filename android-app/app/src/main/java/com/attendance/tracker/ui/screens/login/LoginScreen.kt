@@ -24,7 +24,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    onGoogleSignInClick: () -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -35,13 +34,6 @@ fun LoginScreen(
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
             onLoginSuccess()
-        }
-    }
-    
-    LaunchedEffect(uiState.triggerGoogleSignIn) {
-        if (uiState.triggerGoogleSignIn) {
-            viewModel.onGoogleSignInTriggered()
-            onGoogleSignInClick()
         }
     }
     
@@ -171,53 +163,34 @@ fun LoginScreen(
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 
-                // Divider with "Or continue with"
-                Row(
+                // Google Sign-In Coming Soon
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE5E7EB))
-                    Text(
-                        text = "  Or continue with  ",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF9CA3AF)
-                    )
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE5E7EB))
-                }
-                
-                Spacer(modifier = Modifier.height(20.dp))
-                
-                // Google Sign In Button
-                OutlinedButton(
-                    onClick = { viewModel.signInWithGoogle() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    enabled = !uiState.isLoading,
-                    shape = RoundedCornerShape(12.dp),
-                    border = ButtonDefaults.outlinedButtonBorder,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.White
-                    )
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFF3F4F6)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        // Google "G" logo
                         Text(
                             text = "G",
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF4285F4)
+                            color = Color(0xFF9CA3AF)
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Sign in with Google",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color(0xFF374151)
+                            text = "Google Sign-In (Coming Soon)",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF9CA3AF)
                         )
                     }
                 }
