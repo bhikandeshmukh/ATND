@@ -23,7 +23,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.attendance.tracker.ads.AdMobManager
 import com.attendance.tracker.ads.BannerAdView
-import com.attendance.tracker.data.model.User
 import com.attendance.tracker.data.model.UserRole
 import com.attendance.tracker.ui.navigation.*
 import com.attendance.tracker.ui.screens.attendance.AttendanceScreen
