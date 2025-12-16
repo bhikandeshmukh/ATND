@@ -21,7 +21,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.activity.ComponentActivity
 import com.attendance.tracker.ads.AdMobManager
 import com.attendance.tracker.ads.BannerAdView
 import com.attendance.tracker.data.model.User
