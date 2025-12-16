@@ -117,6 +117,70 @@ npm start
 node scripts/generate-icons.js
 ```
 
+## 📱 Android App
+
+Native Kotlin Android app is also available in `android-app/` folder with same features.
+
+### 🎯 Android App Screens
+
+| Screen | Description |
+|--------|-------------|
+| 🔐 **Login** | Username/password + Google Sign-In with gradient background |
+| 📋 **Attendance** | Check In/Out buttons, real-time earning, today's status with location |
+| 🏖️ **Leaves** | Apply for leaves, view status (Pending/Approved/Rejected), admin approval |
+| 🌙 **Night Duty** | Request night shifts, admin can approve/reject |
+| 📊 **Reports** | Monthly summary, total days, hours, earnings, attendance history |
+| 🔔 **Notifications** | Alerts for leave/night duty approvals, mark as read |
+| 👥 **Employees** | Admin only - Add/Edit/Delete employees, search, role badges |
+
+> 📂 **Interactive Preview:** Open [`android-app/ui-preview.html`](android-app/ui-preview.html) in browser to see all UI screens
+
+### Android Features
+- ✅ Light Theme with Material 3
+- ✅ Bottom Navigation (5 tabs)
+- ✅ Check In/Out with GPS Location
+- ✅ Real-time Earning Display
+- ✅ Leave & Night Duty Management
+- ✅ Push Notifications
+- ✅ Admin & User Roles
+- ✅ Google Sign-In
+- ✅ AdMob Ads Integration
+- ✅ Direct Firebase Connection
+
+### Android Tech Stack
+| Technology | Purpose |
+|------------|---------|
+| Kotlin | Programming Language |
+| Jetpack Compose | Modern UI Framework |
+| Material 3 | Design System |
+| Hilt | Dependency Injection |
+| Firebase Firestore | Database |
+| Google Play Services | Location & Auth |
+| AdMob | Monetization |
+
+### Android App Info
+| Property | Value |
+|----------|-------|
+| Package Name | `com.attendance.tracker` |
+| Min SDK | 26 (Android 8.0) |
+| Target SDK | 34 (Android 14) |
+| Version | 1.0 |
+
+### Build Android APK
+```bash
+cd android-app
+./gradlew assembleDebug
+```
+APK location: `app/build/outputs/apk/debug/app-debug.apk`
+
+### Release APK
+```bash
+cd android-app
+./gradlew assembleRelease
+```
+
+---
+
 ## 🎨 UI Features
 
 ### Sidebar Navigation
