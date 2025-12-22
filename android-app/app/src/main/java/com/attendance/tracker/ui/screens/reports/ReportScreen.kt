@@ -28,6 +28,7 @@ fun ReportScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showMonthPicker by remember { mutableStateOf(false) }
+    var isEarningVisible by remember { mutableStateOf(true) }
     
     LaunchedEffect(userName) {
         viewModel.initialize(userName, userRole)
@@ -126,21 +127,33 @@ fun ReportScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "💰 Total Earning: ",
+                        text = "💰 Monthly Salary: ",
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = "₹${String.format("%,.2f", uiState.totalEarning)}",
+                        text = if (isEarningVisible) "₹${String.format("%,.2f", uiState.totalEarning)}" else "₹ ••••••",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = Green
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        onClick = { isEarningVisible = !isEarningVisible },
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isEarningVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                            contentDescription = if (isEarningVisible) "Hide earning" else "Show earning",
+                            tint = Green,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
                 
                 if (uiState.perMinuteRate > 0) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Rate: ₹${String.format("%.2f", uiState.perMinuteRate)}/min",
+                        text = if (isEarningVisible) "Rate: ₹${String.format("%.2f", uiState.perMinuteRate)}/min" else "Rate: ₹ ••••/min",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -187,7 +200,8 @@ fun ReportScreen(
                 items(uiState.records) { record ->
                     AttendanceHistoryItem(
                         record = record,
-                        perMinuteRate = uiState.perMinuteRate
+                        perMinuteRate = uiState.perMinuteRate,
+                        isEarningVisible = isEarningVisible
                     )
                 }
             }
@@ -274,7 +288,8 @@ fun SummaryItem(
 @Composable
 fun AttendanceHistoryItem(
     record: AttendanceRecord,
-    perMinuteRate: Double
+    perMinuteRate: Double,
+    isEarningVisible: Boolean = true
 ) {
     val dayEarning = record.totalMinutes * perMinuteRate
     
@@ -337,7 +352,7 @@ fun AttendanceHistoryItem(
                 // Day Earning
                 if (perMinuteRate > 0 && record.totalMinutes > 0) {
                     Text(
-                        text = "₹${String.format("%,.2f", dayEarning)}",
+                        text = if (isEarningVisible) "₹${String.format("%,.2f", dayEarning)}" else "₹ ••••",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = Green
@@ -352,5 +367,4 @@ fun AttendanceHistoryItem(
                 }
             }
         }
-    }
 }
