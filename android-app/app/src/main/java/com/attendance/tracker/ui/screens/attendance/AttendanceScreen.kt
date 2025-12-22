@@ -230,6 +230,7 @@ fun RealTimeEarningCard(
 ) {
     var currentEarning by remember { mutableStateOf(0.0) }
     var elapsedMinutes by remember { mutableStateOf(0) }
+    var isEarningVisible by remember { mutableStateOf(true) }
     
     // Parse check-in time and calculate elapsed minutes
     fun parseTimeToMinutes(timeStr: String): Int {
@@ -286,16 +287,34 @@ fun RealTimeEarningCard(
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "💰 Today's Earning (Live)",
-                style = MaterialTheme.typography.titleSmall,
-                color = Color(0xFF059669)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "💰 Today's Earning (Live)",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color(0xFF059669)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = { isEarningVisible = !isEarningVisible },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isEarningVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                        contentDescription = if (isEarningVisible) "Hide earning" else "Show earning",
+                        tint = Color(0xFF059669),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
             
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = "₹${String.format("%,.2f", currentEarning)}",
+                text = if (isEarningVisible) "₹${String.format("%,.2f", currentEarning)}" else "₹ ••••••",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF059669)
@@ -327,6 +346,8 @@ fun TodayEarningCard(
     outTime: String,
     perMinuteRate: Double
 ) {
+    var isEarningVisible by remember { mutableStateOf(true) }
+    
     // Parse time and calculate total minutes worked
     fun parseTimeToMinutes(timeStr: String): Int {
         return try {
@@ -371,6 +392,8 @@ fun TodayEarningCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -391,12 +414,24 @@ fun TodayEarningCard(
                         fontWeight = FontWeight.Bold
                     )
                 }
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = { isEarningVisible = !isEarningVisible },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isEarningVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                        contentDescription = if (isEarningVisible) "Hide earning" else "Show earning",
+                        tint = Color(0xFF059669),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = "₹${String.format("%,.2f", totalEarning)}",
+                text = if (isEarningVisible) "₹${String.format("%,.2f", totalEarning)}" else "₹ ••••••",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF059669)
@@ -455,7 +490,7 @@ fun TodayEarningCard(
             if (perMinuteRate > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Rate: ₹${String.format("%.2f", perMinuteRate)}/min",
+                    text = if (isEarningVisible) "Rate: ₹${String.format("%.2f", perMinuteRate)}/min" else "Rate: ₹ ••••/min",
                     style = MaterialTheme.typography.labelSmall,
                     color = Color(0xFF9CA3AF)
                 )
