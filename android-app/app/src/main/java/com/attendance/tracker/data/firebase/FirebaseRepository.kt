@@ -188,6 +188,40 @@ class FirebaseRepository @Inject constructor() {
         }
     }
     
+    suspend fun getAttendanceByEmployeeName(employeeName: String): Result<List<AttendanceRecord>> {
+        return try {
+            val records = mutableListOf<AttendanceRecord>()
+            
+            val recordsSnapshot = firestore.collection(FirebaseConfig.ATTENDANCE_COLLECTION)
+                .document(employeeName)
+                .collection(FirebaseConfig.RECORDS_SUBCOLLECTION)
+                .get()
+                .await()
+            
+            for (recordDoc in recordsSnapshot.documents) {
+                val data = recordDoc.data ?: continue
+                records.add(
+                    AttendanceRecord(
+                        id = recordDoc.id,
+                        employeeName = employeeName,
+                        date = data[FirebaseConfig.AttendanceFields.DATE] as? String ?: "",
+                        inTime = data[FirebaseConfig.AttendanceFields.IN_TIME] as? String ?: "",
+                        outTime = data[FirebaseConfig.AttendanceFields.OUT_TIME] as? String ?: "",
+                        inLocation = data[FirebaseConfig.AttendanceFields.IN_LOCATION] as? String ?: "",
+                        outLocation = data[FirebaseConfig.AttendanceFields.OUT_LOCATION] as? String ?: "",
+                        totalMinutes = (data[FirebaseConfig.AttendanceFields.TOTAL_MINUTES] as? Long)?.toInt() ?: 0,
+                        totalHours = data[FirebaseConfig.AttendanceFields.TOTAL_HOURS] as? String ?: "",
+                        isNightDuty = false
+                    )
+                )
+            }
+            
+            Result.success(records.sortedByDescending { it.date })
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
     suspend fun checkIn(
         employeeName: String,
         date: String,

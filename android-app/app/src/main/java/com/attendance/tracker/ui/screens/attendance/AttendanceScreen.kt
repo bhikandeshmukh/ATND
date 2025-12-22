@@ -11,13 +11,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.attendance.tracker.data.model.UserRole
 import com.attendance.tracker.ui.theme.Green
 import com.attendance.tracker.ui.theme.Red
-import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
@@ -47,19 +47,34 @@ fun AttendanceScreen(
             )
         }
         
-        // Real-time Earning (if checked in)
-        if (uiState.isCheckedIn && !uiState.isCheckedOut) {
+        // Today's Earning Card - Show when checked in (live) or after checkout (final)
+        if (uiState.isCheckedIn) {
             item {
-                RealTimeEarningCard(
-                    checkInTime = uiState.inTime,
-                    perMinuteRate = uiState.perMinuteRate
-                )
+                if (uiState.isCheckedOut) {
+                    // Show final earning after checkout
+                    TodayEarningCard(
+                        inTime = uiState.inTime,
+                        outTime = uiState.outTime,
+                        perMinuteRate = uiState.perMinuteRate
+                    )
+                } else {
+                    // Show live earning while working
+                    RealTimeEarningCard(
+                        checkInTime = uiState.inTime,
+                        perMinuteRate = uiState.perMinuteRate
+                    )
+                }
             }
         }
         
         // Today's Status
         item {
             TodayStatusCard(uiState = uiState)
+        }
+        
+        // Overtime Tracker Card
+        item {
+            OvertimeTrackerCard(uiState = uiState)
         }
         
         // Admin: Recent Records
@@ -289,10 +304,153 @@ fun RealTimeEarningCard(
             Spacer(modifier = Modifier.height(4.dp))
             
             Text(
-                text = "Working: ${elapsedMinutes / 60}h ${elapsedMinutes % 60}m",
+                text = "Working: ${elapsedMinutes / 60}h ${elapsedMinutes % 60}m (${elapsedMinutes}m)",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF6B7280)
             )
+            
+            if (perMinuteRate > 0) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Rate: ₹${String.format("%.2f", perMinuteRate)}/min",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF9CA3AF)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TodayEarningCard(
+    inTime: String,
+    outTime: String,
+    perMinuteRate: Double
+) {
+    // Parse time and calculate total minutes worked
+    fun parseTimeToMinutes(timeStr: String): Int {
+        return try {
+            val parts = timeStr.split(" ")
+            val timeParts = parts[0].split(":")
+            var hours = timeParts[0].toInt()
+            val minutes = timeParts[1].toInt()
+            val period = parts.getOrNull(1)?.uppercase() ?: "AM"
+            
+            if (period == "PM" && hours != 12) hours += 12
+            if (period == "AM" && hours == 12) hours = 0
+            
+            hours * 60 + minutes
+        } catch (e: Exception) {
+            0
+        }
+    }
+    
+    val inMinutes = parseTimeToMinutes(inTime)
+    val outMinutes = parseTimeToMinutes(outTime)
+    
+    val totalMinutes = if (outMinutes >= inMinutes) {
+        outMinutes - inMinutes
+    } else {
+        // Handle overnight (crossed midnight)
+        (24 * 60 - inMinutes) + outMinutes
+    }
+    
+    val totalEarning = totalMinutes * perMinuteRate
+    val hours = totalMinutes / 60
+    val mins = totalMinutes % 60
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFECFDF5))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "💰 Today's Earning",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color(0xFF059669)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color(0xFF059669)
+                ) {
+                    Text(
+                        text = "COMPLETE",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "₹${String.format("%,.2f", totalEarning)}",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF059669)
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text(
+                text = "Total Worked: ${hours}h ${mins}m (${totalMinutes}m)",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF6B7280)
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Time details
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Filled.Login,
+                        contentDescription = null,
+                        tint = Green,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = inTime,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF6B7280)
+                    )
+                }
+                
+                Text(
+                    text = "→",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF9CA3AF)
+                )
+                
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Filled.Logout,
+                        contentDescription = null,
+                        tint = Red,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = outTime,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF6B7280)
+                    )
+                }
+            }
             
             if (perMinuteRate > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
@@ -338,12 +496,12 @@ fun TodayStatusCard(uiState: AttendanceUiState) {
                 )
                 StatusItem(
                     label = "Check In",
-                    value = uiState.inTime.ifEmpty { "--:--" },
+                    value = uiState.inTime.ifEmpty { "--:--:--" },
                     icon = Icons.Filled.Login
                 )
                 StatusItem(
                     label = "Check Out",
-                    value = uiState.outTime.ifEmpty { "--:--" },
+                    value = uiState.outTime.ifEmpty { "--:--:--" },
                     icon = Icons.Filled.Logout
                 )
             }
@@ -369,6 +527,200 @@ fun TodayStatusCard(uiState: AttendanceUiState) {
                         color = Color(0xFF6B7280)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun OvertimeTrackerCard(uiState: AttendanceUiState) {
+    val targetMinutes = uiState.monthlyTargetMinutes
+    val workedMinutes = uiState.monthlyWorkedMinutes
+    val deficit = uiState.deficitMinutes
+    val overtimePerDay = uiState.overtimeRequired
+    val daysRemaining = uiState.daysRemaining
+    val daysWorked = uiState.daysWorked
+    
+    // Progress percentage
+    val progress = if (targetMinutes > 0) (workedMinutes.toFloat() / targetMinutes.toFloat()).coerceIn(0f, 1f) else 0f
+    
+    // Determine card color based on status
+    val cardColor = when {
+        deficit <= 0 -> Color(0xFFECFDF5) // Green - on track
+        deficit > 0 && daysRemaining > 0 -> Color(0xFFFEF3C7) // Yellow - behind but recoverable
+        else -> Color(0xFFFEE2E2) // Red - critical
+    }
+    
+    val statusColor = when {
+        deficit <= 0 -> Color(0xFF059669)
+        deficit > 0 && daysRemaining > 0 -> Color(0xFFD97706)
+        else -> Color(0xFFDC2626)
+    }
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "⏱️ Monthly Progress",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = statusColor
+                ) {
+                    Text(
+                        text = if (deficit <= 0) "ON TRACK" else "BEHIND",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Progress Bar
+            LinearProgressIndicator(
+                progress = progress,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp),
+                color = statusColor,
+                trackColor = Color.White
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "${workedMinutes}m / ${targetMinutes}m (${(progress * 100).toInt()}%)",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF6B7280)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Stats Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "$daysWorked",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = statusColor
+                    )
+                    Text(
+                        text = "Days Worked",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF6B7280)
+                    )
+                }
+                
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "$daysRemaining",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF6B7280)
+                    )
+                    Text(
+                        text = "Days Left",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF6B7280)
+                    )
+                }
+                
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "${workedMinutes / 60}h ${workedMinutes % 60}m",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = statusColor
+                    )
+                    Text(
+                        text = "Total Worked",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF6B7280)
+                    )
+                }
+            }
+            
+            // Deficit & Overtime Section
+            if (deficit > 0) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Divider(color = Color.White.copy(alpha = 0.5f))
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = "📉 Deficit",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color(0xFF6B7280)
+                        )
+                        Text(
+                            text = "${deficit / 60}h ${deficit % 60}m (${deficit}m)",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = statusColor
+                        )
+                    }
+                    
+                    if (daysRemaining > 0) {
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "⚡ Overtime/Day",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color(0xFF6B7280)
+                            )
+                            Text(
+                                text = "+${overtimePerDay}m extra",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = statusColor
+                            )
+                        }
+                    }
+                }
+                
+                if (daysRemaining > 0) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "💡 Work ${600 + overtimePerDay}m/day to cover deficit",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = statusColor,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            } else if (workedMinutes > 0) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "✅ Great! You're on track this month",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = statusColor,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }

@@ -55,4 +55,8 @@ class AttendanceRepository @Inject constructor(
             Result.failure(e)
         }
     }
+    
+    suspend fun getMonthlyAttendance(employeeName: String): Result<List<AttendanceRecord>> {
+        return firebaseRepository.getAttendanceByEmployeeName(employeeName)
+    }
 }

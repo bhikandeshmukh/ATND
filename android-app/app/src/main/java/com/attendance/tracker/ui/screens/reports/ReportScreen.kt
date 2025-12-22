@@ -110,7 +110,7 @@ fun ReportScreen(
                     )
                     SummaryItem(
                         label = "Total Hours",
-                        value = "${uiState.totalHours}h ${uiState.totalMinutes % 60}m",
+                        value = "${uiState.totalHours}h ${uiState.totalMinutes % 60}m (${uiState.totalMinutes}m)",
                         icon = Icons.Filled.AccessTime
                     )
                 }
@@ -326,9 +326,9 @@ fun AttendanceHistoryItem(
             }
             
             Column(horizontalAlignment = Alignment.End) {
-                // Working Hours
+                // Working Hours with total minutes
                 Text(
-                    text = record.totalHours.ifEmpty { "${record.totalMinutes / 60}h ${record.totalMinutes % 60}m" },
+                    text = "${record.totalMinutes / 60}h ${record.totalMinutes % 60}m (${record.totalMinutes}m)",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF2563EB)

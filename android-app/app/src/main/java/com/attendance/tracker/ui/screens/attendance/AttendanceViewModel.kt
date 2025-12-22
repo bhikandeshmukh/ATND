@@ -30,7 +30,16 @@ data class AttendanceUiState(
     val currentDate: String = "",
     val message: String = "",
     val perMinuteRate: Double = 0.0,
-    val recentRecords: List<AttendanceRecord> = emptyList()
+    val recentRecords: List<AttendanceRecord> = emptyList(),
+    // Overtime Tracker
+    val workingDaysTarget: Int = 26,
+    val dailyMinutesTarget: Int = 600,
+    val monthlyTargetMinutes: Int = 15600, // 26 * 600
+    val monthlyWorkedMinutes: Int = 0,
+    val daysWorked: Int = 0,
+    val daysRemaining: Int = 0,
+    val deficitMinutes: Int = 0,
+    val overtimeRequired: Int = 0
 )
 
 @HiltViewModel
@@ -59,6 +68,7 @@ class AttendanceViewModel @Inject constructor(
         
         checkAttendanceStatus()
         loadEmployeeData()
+        loadMonthlyOvertimeData()
         
         if (role == UserRole.ADMIN) {
             loadRecentRecords()
@@ -111,6 +121,61 @@ class AttendanceViewModel @Inject constructor(
             result.onSuccess { records ->
                 _uiState.value = _uiState.value.copy(
                     recentRecords = records.sortedByDescending { it.date }
+                )
+            }
+        }
+    }
+    
+    private fun loadMonthlyOvertimeData() {
+        viewModelScope.launch {
+            val result = attendanceRepository.getMonthlyAttendance(userName)
+            result.onSuccess { records ->
+                val calendar = Calendar.getInstance()
+                val currentMonth = calendar.get(Calendar.MONTH)
+                val currentYear = calendar.get(Calendar.YEAR)
+                val currentDay = calendar.get(Calendar.DAY_OF_MONTH)
+                
+                // Filter records for current month
+                val monthlyRecords = records.filter { record ->
+                    try {
+                        val recordDate = dateFormat.parse(record.date)
+                        val recordCal = Calendar.getInstance()
+                        recordCal.time = recordDate!!
+                        recordCal.get(Calendar.MONTH) == currentMonth && 
+                        recordCal.get(Calendar.YEAR) == currentYear
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+                
+                // Calculate total worked minutes this month
+                val totalWorkedMinutes = monthlyRecords.sumOf { it.totalMinutes }
+                val daysWorked = monthlyRecords.size
+                
+                // Calculate expected minutes till today
+                // Assuming working days = min(currentDay, 26)
+                val workingDaysTillNow = minOf(currentDay, 26)
+                val expectedMinutesTillNow = workingDaysTillNow * 600
+                
+                // Calculate deficit
+                val deficit = expectedMinutesTillNow - totalWorkedMinutes
+                
+                // Days remaining in month (assuming 26 working days)
+                val daysRemaining = maxOf(0, 26 - daysWorked)
+                
+                // Overtime required per remaining day to cover deficit
+                val overtimePerDay = if (daysRemaining > 0 && deficit > 0) {
+                    deficit / daysRemaining
+                } else {
+                    0
+                }
+                
+                _uiState.value = _uiState.value.copy(
+                    monthlyWorkedMinutes = totalWorkedMinutes,
+                    daysWorked = daysWorked,
+                    daysRemaining = daysRemaining,
+                    deficitMinutes = maxOf(0, deficit),
+                    overtimeRequired = overtimePerDay
                 )
             }
         }
