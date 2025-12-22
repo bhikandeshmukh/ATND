@@ -367,4 +367,5 @@ fun AttendanceHistoryItem(
                 }
             }
         }
+    }
 }
